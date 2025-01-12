@@ -2,7 +2,7 @@
 
 <img class="cover-logo"  src="https://raw.githubusercontent.com/clovers-project/clovers.github.io/master/docs/icon.png" alt="logo">
 
-# clovers <small>v1</small>
+# clovers <small>v3</small>
 
 > 高度自定义的聊天平台 Python 异步机器人指令-响应插件框架
 
