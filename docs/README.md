@@ -3,7 +3,7 @@
 _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框架 ✨_
 
 <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
-<a href="./LICENSE">
+<a href="https://github.com/clovers-project/clovers/blob/master/LICENSE">
   <img src="https://img.shields.io/github/license/KarisAya/clovers.svg" alt="license">
 </a>
 <a href="https://pypi.python.org/pypi/clovers">
@@ -265,7 +265,7 @@ async def _(event: Event):
 @plugin.handle(
     ["其他功能"],
     properties=["to_me"],
-    rule=lambda e: e.kwargs["to_me"],
+    rule=lambda e: e.properties["to_me"],
     priority=10,
     block=False,
 )
@@ -388,7 +388,7 @@ __adapter__ = adapter  # 暴露 __adapter__ 属性
 
 所以你需要在适配器方法中定义这个参数的获取方法
 
-kwarg 方法的参数是 clovers 实例响应时传入的，我们可以传入任意参数，请参考 [使用 Clovers 框架](#使用-clovers-框架) 3. 在运行阶段先启动实例再执行响应任务
+property 方法的参数是 clovers 实例响应时传入的，我们可以传入任意参数，请参考 [使用 Clovers 框架](#使用-clovers-框架) 3. 在运行阶段先启动实例再执行响应任务
 
 下面是 nonebot_plugin_clovers.adapters.onebot.v11 中的一个例子
 

@@ -1,15 +1,15 @@
-<p align="center">
+<div align="center">
   <a href="https://v2.nonebot.dev/"><img src="https://v2.nonebot.dev/logo.png" width="200" height="200" alt="nonebot"></a>
   <a href="https://clovers-project.github.io/">
     <img src="https://raw.githubusercontent.com/clovers-project/clovers.github.io/master/docs/icon.png" width="200" height="200" alt="clovers">
   </a>
-</p>
-<div align="center">
 
-# NoneBot clovers 加载器
+<b><font size="6">NoneBot clovers 加载器</font></b>
+
+✨ 专用对接 NoneBot 框架的预制 clovers 运行例 ✨
 
 <img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
-<a href="./LICENSE">
+<a href="https://github.com/clovers-project/nonebot-plugin-clovers/blob/master/LICENSE">
   <img src="https://img.shields.io/github/license/KarisAya/nonebot_plugin_clovers.svg" alt="license">
 </a>
 <a href="https://pypi.python.org/pypi/nonebot_plugin_clovers">
@@ -20,10 +20,15 @@
 </a>
 </div>
 
-# 概述
+# 介绍
 
-1. 本模块曾经为 NoneBot 插件，但在 2.0 更新后移除了全部 on 响应器，变成了普通的 python 模块。
-2. 本模块不再对接响应，只提供一个预制的 clovers 实例
+本模块曾经为 NoneBot 插件。
+
+但在 2.0 更新后移除了全部 on 响应器，不再对接响应。
+
+只提供一个预制的 clovers 实例。
+
+现在是普通的 python 模块。
 
 # 使用方法
 
