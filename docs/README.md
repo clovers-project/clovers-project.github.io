@@ -2,16 +2,11 @@
 
 _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框架 ✨_
 
-<img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="python">
-<a href="https://github.com/clovers-project/clovers/blob/master/LICENSE">
-  <img src="https://img.shields.io/github/license/KarisAya/clovers.svg" alt="license">
-</a>
-<a href="https://pypi.python.org/pypi/clovers">
-  <img src="https://img.shields.io/pypi/v/clovers.svg" alt="pypi">
-</a>
-<a href="https://pypi.python.org/pypi/clovers">
-  <img src="https://img.shields.io/pypi/dm/clovers" alt="pypi download">
-</a>
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
+[![pypi](https://img.shields.io/pypi/v/clovers.svg)](https://pypi.python.org/pypi/clovers)
+[![pypi download](https://img.shields.io/pypi/dm/clovers)](https://pypi.python.org/pypi/clovers)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![Github](https://img.shields.io/badge/GitHub-Clovers-00CC33?logo=github)](https://github.com/clovers-project/clovers)
 
 - 本项目遵循着高度自定义的理念。因此本文所有的范例并不作为任何标准。希望你可以随心所欲的遵循自己的风格。
 - 本项目无法单独使用，需要寄生在其他框架或循环中，比如 [NoneBot2](https://nonebot.dev/)
@@ -25,6 +20,7 @@ _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框
 - 可以使用 Clovers 实例生成 Leaf 实例，也可以直接使用 Leaf 类创建实例。
 - 在响应器中使用到的额外参数都需要在注册响应器时声明
 - 除了指令字符串，其他所有事件信息都是额外参数，需要自定义获取方法。
+- 项目的主题色是 <span style="color:#FFFFFF;background-color:#00CC33;">#00CC33</span> 🍀
 
 # 安装
 
