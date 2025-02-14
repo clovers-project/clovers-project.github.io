@@ -7,6 +7,7 @@ _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框
 [![pypi download](https://img.shields.io/pypi/dm/clovers)](https://pypi.python.org/pypi/clovers)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 [![Github](https://img.shields.io/badge/GitHub-Clovers-00CC33?logo=github)](https://github.com/clovers-project/clovers)
+[![LICENSE](https://img.shields.io/github/license/clovers-project/clovers.svg)](https://github.com/clovers-project/clovers)
 
 - 本项目遵循着高度自定义的理念。因此本文所有的范例并不作为任何标准。希望你可以随心所欲的遵循自己的风格。
 - 本项目无法单独使用，需要寄生在其他框架或循环中，比如 [NoneBot2](https://nonebot.dev/)
