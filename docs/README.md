@@ -368,11 +368,11 @@ temp_handle 任务的参数除了 event，你还会获得一个 handle 参数，
 
 当 (pBlk) 为 True, (hBlk) 为 True 时：阻断低于当前 (pPri) 和当前 (pPri) 内低于当前 (hPri) 的任务。
 
-当 (pBlk) 为 True 时，(hBlk) 为 False 时：阻断低于当前 (pPri) 的任务，但会继续触发当前 (pPri) 内低于当前 (hPri) 的任务。
+当 (pBlk) 为 True, (hBlk) 为 False 时：阻断低于当前 (pPri) 的任务，但会继续触发当前 (pPri) 内低于当前 (hPri) 的任务。
 
-当 (pBlk) 为 False 时，(hBlk) 为 True 时：阻断当前 (pPri) 内低于 (hPri) 的任务，但会继续触发低于当前 (pPri) 的任务。
+当 (pBlk) 为 False, (hBlk) 为 True 时：阻断当前 (pPri) 内低于 (hPri) 的任务，但会继续触发低于当前 (pPri) 的任务。
 
-当 (pBlk) 为 False 时，(hBlk) 为 False 时：不阻断
+当 (pBlk) 为 False, (hBlk) 为 False 时：不阻断
 
 ## 插件配置文件
 
