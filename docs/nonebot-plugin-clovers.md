@@ -22,24 +22,39 @@
 
 本模块在 NoneBot 内部运行，寄生方式为 nonebot.on_message 响应器
 
-# 配置与使用方法
+# 安装
 
 首先先安装本模块
 
 <details open>
-<summary>pip</summary>
+<summary>使用 nb-cli </summary>
 
 ```bash
-pip install nonebot_plugin_clovers
+np plugin install nonebot-plugin-clovers
 ```
 
 </details>
 
 <details>
+
+<summary>使用其他依赖管理器</summary>
+
+<details open>
+
+<summary>pip</summary>
+
+```bash
+pip install nonebot-plugin-clovers
+```
+
+</details>
+
+<details>
+
 <summary>poetry</summary>
 
 ```bash
-poetry add nonebot_plugin_clovers
+poetry add nonebot-plugin-clovers
 ```
 
 </details>
@@ -49,35 +64,42 @@ poetry add nonebot_plugin_clovers
 ```toml
 # pyproject.toml
 [tool.nonebot]
-...
+# something
 plugins = ["nonebot_plugin_clovers"]
 ```
 
-然后在 nb 项目文件夹下创建 clovers.toml ,填写如下配置
+</details>
+
+# 配置插件
+
+在 NoneBot 项目目录下的 .env 文件中添加如下配置
+
+```env
+CLOVERS_USING_ADAPTERS = '[
+"nonebot_plugin_clovers.adapters.onebot.v11"
+]'
+CLOVERS_MATCHER_PRIORITY = 300
+```
+
+这样就完成了对接
+
+CLOVERS_USING_ADAPTERS 是一个列表，列表中的元素为需要使用的适配器模块名。每个元素都会添加一个监听事件，事件类型由模块内的 handler 函数的参数类型声明决定。
+
+CLOVERS_MATCHER_PRIORITY 是寄生客户端所在的 NoneBot 响应器优先级
+
+# 配置 clovers
+
+在 nb 项目文件夹下创建 clovers.toml ,填写如下配置
 
 ```toml
 # clovers.toml
 [clovers]
 plugins = ["clovers_setu_collection"]
-plugin_dirs = [ "./clovers_library/plugins"]
-using_adapters = ["nonebot_plugin_clovers.adapters.onebot.v11"]
+plugin_dirs = [ "./src/clovers/plugins"]
 ```
 
 `plugins` 加载插件的模块名列表
 `plugin_dirs` 插件模块的目录列表，目录下的所有符合 python 模块名的文件都会被加载
-`using_adapters` 加载适配器的模块名列表
-
-这样就完成了对接
-
-每个 using_adapters 内的元素都会添加一个监听事件，时间类型由模块内的 handler 函数的参数类型列表决定。
-
-此外在插件内可以像这样使用 NoneBot Clovers Client 加载 clovers 插件
-
-```python
-from nonebot_plugin_clovers import get_client
-
-get_client().load_plugin("clovers_setu_collection")
-```
 
 # 适用于 NoneBot Clovers Client 的适配器
 
