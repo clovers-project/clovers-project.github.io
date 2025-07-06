@@ -91,7 +91,7 @@ plugins = ["clovers_setu_collection"]
 
 但是 clovers 的理念是完全的自定义，所以 `nonebot_plugin_clovers` 仅作为一种示范，不作为任何标准。
 
-更推荐的是自行[编写适配器](#编写适配器)
+更推荐的是自行[编写适配器](#适配器-adapter)
 
 # 插件 Plugin
 
@@ -272,6 +272,16 @@ async def _(event: Event):
     print(event.properties["others"])  # KeyError
 ```
 
+也可以这样
+
+```python
+@plugin.handle(["测试"], properties=["user_id", "group_id"])
+async def _(event: Event):
+    print(event.user_id)
+    print(event.group_id)
+    print(event.others)  # KeyError
+```
+
 适配器方法会根据你需要的参数构建 event.properties
 
 有时你可能需要在函数中向平台传递一些参数才能拿到响应，那么这样的话不适用于提前声明
@@ -296,7 +306,7 @@ async def _(event: Event):
 @plugin.handle(
     ["其他功能"],
     properties=["to_me"],
-    rule=lambda e: e.properties["to_me"],
+    rule=lambda e: e.to_me,
     priority=10,
     block=False,
 )
@@ -528,13 +538,59 @@ async def _(event: Event):
 
 如果 property_method, send_method 注册了同名的方法，那么 call 会调用第一个注册的方法，**但是非常不建议使用这个特性。**
 
+# 类型协议 CloversProtocol
+
+适配器方法会根据插件声明的参数构建参数，处理响应结果。但是同名参数不一定是兼容的
+
+假如：插件声明了需要参数 `user_id` 同时默认此参数是 `int` 类型。适配器声明了参数 `user_id`，但返回值是 `str` 类型。
+
+插件拿到的 `user_id` 实际上是 `str` 类型，但由于适配器存在同名方法不会报错，所以可能会导致非常严重的问题。
+
+为了避免这种情况 clovers 提供了一个类型协议，如果插件设置了类型协议则会进行类型响应过滤。
+
+插件需要包含适配器的全部可能类型才会检查通过。
+
+```python
+class AdapterProtocol:
+    user_id: str
+
+class PluginProtocol:
+    user_id: str | int
+
+print(check_compatible(AdapterProtocol,PluginProtocol)) # True
+print(check_compatible(PluginProtocol,AdapterProtocol)) # False
+```
+
+`check_compatible` 只会检查两个协议都有的字段，如果插件声明了适配器不存在的字段，初始化行为是未定义而非不兼容
+
+适配器的代码中如果写了完整的类型提示则不需要显示设置适配器的类型协议。
+
+```python
+@adapter.property_method("user_id")
+async def _(event: Event) -> str:
+    return event.get_user_id()
+```
+
+这样写相当于
+
+```python
+@adapter.property_method("user_id")
+async def _(event: Event):
+    return event.get_user_id()
+
+class AdapterProtocol:
+    user_id: str
+
+adapter.set_protocol("properties", AdapterProtocol)
+```
+
+插件则需要显式设置协议
+
 # 响应处理器 Leaf
 
 Leaf 是一个用于处理适配器与插件的响应处理器基类。
 
 继承这个类并实现 extract_message 方法即可创建一个可用的响应处理器
-
-如果没有实现 extract_key 那么响应处理器将无法触发插件的键响应任务
 
 extract_message 接受的参数来自调用 response 方法时转入的参数，一般来说不同运行例有不同的参数。
 
@@ -551,9 +607,6 @@ class MyLeaf(BaseLeaf):
             inputs = inputs.lstrip(Bot_Nickname)
             state["to_me"] = True
         return inputs
-
-    def extract_key(self, state: dict, **ignore):
-        return state.get("event_type")
 ```
 
 使用方法
