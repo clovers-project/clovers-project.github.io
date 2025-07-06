@@ -120,6 +120,8 @@ async def handler(bot: Bot, event: MessageCreatedEvent, matcher: Matcher): ...
 
 # 预制的适配器 adapter
 
+_包内的适配器方法仅作为适配器写法示例，并不作为任何标准，不建议直接调用。_
+
 adapters 提供了如下适配器：
 
 **ONEBOT.V11**
@@ -138,7 +140,15 @@ adapters 提供了如下适配器：
 
 适用于 nonebot.adapters.qq 适配器的 clover 适配器，用于响应 AtMessageCreateEvent 事件
 
-_因为 qq 适配器的群组/频道消息事件差别过大，所以分成了 QQ.GROUP 和 QQ.GUILD 两个适配器_
+_因为 QQ 适配器的群组/频道消息事件差别过大，所以分成了 QQ.GROUP 和 QQ.GUILD 两个适配器_
+
+**UNINFO**
+
+适用于任何 [uninfo](https://github.com/RF-Tar-Railt/nonebot-plugin-uninfo) 和 [uniseg](https://github.com/nonebot/plugin-alconna/tree/master/src/nonebot_plugin_alconna/uniseg) 同时支持的适配器。的 clover 适配器，响应任意事件（nb Event 基类），如需要过滤事件请自行改动
+
+## 发送类型协议
+
+_因为 QQ 适配器语音消息需要 silk 格式的音频而其他适配器有的并不支持此格式，所以这些适配器同名方法并完全不等价 ~除了 QQ 适配器以外剩下的方法完全等价~_
 
 这些适配器全部实现了如下 5 种发送方法
 
@@ -164,11 +174,51 @@ _因为 qq 适配器的群组/频道消息事件差别过大，所以分成了 Q
 
 `segmented` 分段发送消息
 
-数据类型 `AsyncGenerator` 异步生成器，生成的元素是 `Result` 类型，每段消息在生成时发送。
+数据类型 `AsyncGenerator[Result]` 异步生成器，每段消息在生成时发送。
 
-_因为 qq 适配器语音消息需要 silk 格式的音频而其他适配器有的并不支持此格式，所以这些适配器同名方法并不等价_
+## 参数类型协议
 
-_包内的适配器方法仅作为适配器写法示例，并不作为任何标准，不建议直接调用。_
+_并非所有适配器都实现了如下字段 ~但除了 QQ 适配器以外都实现了如下字段~_
+
+`Bot_Nickname` Bot 昵称
+
+数据类型 `str`
+
+`user_id` 用户 id
+
+数据类型 `str`
+
+`group_id` 群组 id, 如果是私聊则为 `None`
+
+数据类型 `str` | `None`
+
+`nickname` 用户昵称
+
+数据类型 `str`
+
+`avatar` 用户头像 url
+
+数据类型 `str`
+
+`group_avatar` 群组头像 url
+
+数据类型 `str` | `None`,私聊或无法获取则为 `None`
+
+`to_me` 事件是否与 Bot 相关
+
+数据类型 `bool`
+
+`permission` 权限等级
+
+数据类型 `int`,3 为超级管理员,2 为群主,1 为管理员,0 为普通用户
+
+`at` 消息中@到的用户 id 列表,列表内元素的数值等于对方事件的`user_id`字段
+
+数据类型 `list[str]`
+
+`image_list` 消息中相关图片的 url 列表
+
+数据类型 `list[str]`
 
 # 故事
 
