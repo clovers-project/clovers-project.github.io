@@ -1,6 +1,6 @@
 # 插件模板
 
-[下载](https://raw.githubusercontent.com/clovers-project/clovers-project.github.io/src/plugin_template.zip)
+[下载](https://github.com/clovers-project/clovers-project.github.io/raw/refs/heads/master/src/plugin_template.zip)
 
 示例插件的结构如下，下面的例子会有较为完整的类型提示
 
