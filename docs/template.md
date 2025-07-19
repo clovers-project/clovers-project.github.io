@@ -1,6 +1,6 @@
 # 插件模板
 
-[下载](https://raw.githubusercontent.com/clovers-project/clovers-project.github.io/src/plugin_template.zip)
+[插件模板](https://github.com/clovers-project/poetry-clovers-plugin/tree/master/poetry_clovers_plugin/core/template/plugin)
 
 示例插件的结构如下，下面的例子会有较为完整的类型提示
 
@@ -17,11 +17,19 @@
 # config.py
 
 from pydantic import BaseModel
+from clovers.config import Config as CloversConfig
 
 
 class Config(BaseModel):
     random_value: int = 80
     default_flag: bool = True
+
+    @classmethod
+    def sync_config(cls):
+        """获取 `CloversConfig.environ()[__package__]` 配置并将默认配置同步到全局配置中。"""
+        __config_dict__: dict = CloversConfig.environ().setdefault(__package__, {})
+        __config_dict__.update((__config__ := cls.model_validate(__config_dict__)).model_dump())
+        return __config__
 ```
 
 创建插件,设置协议,设置返回值构建函数
@@ -77,12 +85,9 @@ plugin.set_protocol("properties", Event)
 
 ```python
 from .clovers import Event, Rule, plugin
-from clovers.config import Config as CloversConfig
 from .config import Config
 
-config_data = CloversConfig.environ().setdefault(__package__, {})
-__config__ = Config.model_validate(config_data)
-config_data.update(__config__.model_dump())
+__config__ = Config.sync_config()
 
 # 读取配置
 
@@ -123,3 +128,7 @@ async def _(event: Event):
 [NoneBotClovers 客户端内置适配器](https://github.com/clovers-project/nonebot-plugin-clovers/tree/master/nonebot_plugin_clovers/adapters)
 
 [Clovers 客户端内置适配器](https://github.com/clovers-project/clovers-client/tree/master/clovers_client)
+
+# 客户端模板
+
+[Clovers 官方客户端](https://github.com/clovers-project/clovers-client)
