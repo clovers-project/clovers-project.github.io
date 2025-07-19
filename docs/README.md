@@ -17,7 +17,7 @@ _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框
 # 其他的介绍
 
 - Leaf 负责单个适配器下插件的响应，Client 负责管理插件的启动和运行逻辑。上述类型为基类。
-- 如果需要创建只有一个适配器的客户端可以在实现类里面同时继承 (Leaf, Client),也可以继承 LeafClient。
+- 如果需要创建只有一个适配器的客户端可以在实现类里面同时继承 (Leaf, Client), 也可以继承 LeafClient。
 - 在响应器中使用到的额外参数都需要在注册响应器时声明
 - 除了指令字符串，其他所有事件信息都是额外参数，需要自定义获取方法。
 - 项目的主题色是 <span style="color:#FFFFFF;background-color:#00CC33;">#00CC33</span> 🍀
@@ -44,25 +44,79 @@ poetry add clovers
 
 # 快速开始
 
-以 Nonebot2 框架作为宿主,并且使用 `nonebot.adapters.onebot.v11` 适配器和 `nonebot_plugin_clovers` 寄生客户端为例。
+使用 Clovers CLI
 
-## 使用本地插件加载 clovers 插件
+<script>
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.type = "text/css";
+  link.href = "asserts/asciinema-player.css";
+  document.head.appendChild(link);
+  const script = document.createElement("script");
+  script.src = "asserts/asciinema-player.min.js";
+  document.body.appendChild(script);
+  asciinema_config = {
+    cols: 128, 
+    rows: 24, 
+    theme: "nord", 
+  };
+  script.onload = () => {
+    window.AsciinemaPlayer.create(
+      "/casts/create.cast", 
+      document.getElementById("create"), 
+      asciinema_config
+    );
+  };
+</script>
 
-创建一个 NoneBot 项目之后在 `\src\plugins` 新建一个 nb 本地插件（本地插件的位置是你指定的）
-
-例如你创建的项目名为 `connect_to_clovers.py`
-
-```python
-from nonebot_plugin_clovers import get_client
-
-get_client().load_plugin("clovers_setu_collection")
+```bash
+clovers create <项目名称>
+cd <项目名称>
+clovers plugin add <插件名>
+clovers run
 ```
 
-这样你就成功加载了 [clovers_setu_collection](https://github.com/clovers-project/clovers-setu-collection) 作为 Nonebot 插件, _[nonebot_plugin_setu_collection](https://github.com/KarisAya/nonebot_plugin_setu_collection)_ 就是这样做的
+下面是一个示例：创建一个使用 `onebot` 协议的 `clovers` 项目
 
-## 使用 nonebot_plugin_clovers 加载插件
+<div id="create" style="width: 50vw"></div>
 
-使用 nb 加载 nonebot_plugin_clovers
+_示例中提示报错是由于未连接到协议服务端。如果在 `ws://127.0.0.1:3001` 存在协议端(如 [LLOneBot](https://github.com/LLOneBot/LLOneBot))即可正常使用。_
+
+# 使用 NoneBot2 框架
+
+1. [NoneBot Clovers Client](/nonebot-plugin-clovers.md) 是一个寄生在 NoneBot 框架下 clovers 客户端，包名为 `nonebot_plugin_clovers` 属于 NoneBot 插件。
+
+2. NoneBot Clovers Client 会在 NoneBot 项目中运行一个 CloversClient 实例, 通过 NoneBot2 的响应器获取指令使 clovers 实例内插件响应。
+
+3. 安装 `nonebot_plugin_clovers` 插件的 NoneBot 项目本身可视为一个 Clovers 项目。
+
+下面以 Nonebot2 框架作为宿主, 并且使用 `nonebot.adapters.onebot.v11` 适配器和 `nonebot_plugin_clovers` 插件为例。
+
+_NoneBot Clovers Client 的[配置项](/nonebot-plugin-clovers?id=配置插件) 使用了 `nonebot_plugin_clovers.adapters.onebot.v11` 但是 clovers 的理念是完全的自定义，所以 `nonebot_plugin_clovers` 内部的自带的适配器仅作为一种示范，不作为任何标准，更推荐的是自行[编写适配器](#适配器-adapter)_
+
+## 安装 NoneBot Clovers Client
+
+<details open>
+
+<summary> 使用 nb-cli (推荐) </summary>
+
+在 NoneBot 项目路径下执行以下命令安装 `nonebot_plugin_clovers` 插件。
+
+```bash
+nb plugin install nonebot-plugin-clovers
+```
+
+</details>
+
+<details>
+
+<summary> 手动安装 </summary>
+
+使用一个你喜欢的包管理器安装 nonebot-plugin-clovers
+
+```bash
+pip install nonebot-plugin-clovers
+```
 
 打开 NoneBot 项目目录下的 pyproject.toml 文件，添加 nonebot_plugin_clovers 到 plugins
 
@@ -73,29 +127,56 @@ get_client().load_plugin("clovers_setu_collection")
 plugins = ["nonebot_plugin_clovers"]
 ```
 
-然后在 nb 项目文件夹下创建 clovers.toml ,填写如下配置
+</details>
+
+## 使用 NoneBot 插件加载 clovers 插件
+
+创建一个 NoneBot 项目之后在 `\src\plugins` 新建一个 nb 本地插件（本地插件的位置是你指定的）
+
+例如你创建的项目名为 `connect_to_clovers.py`
+
+```python
+from nonebot import require
+
+require("nonebot_plugin_clovers").client.load_plugin("clovers_setu_collection")
+# 你还可以继续加载其他插件
+```
+
+_这样你就成功加载了 [clovers_setu_collection](https://github.com/clovers-project/clovers-setu-collection) 作为 Nonebot 插件, [nonebot_plugin_setu_collection](https://github.com/KarisAya/nonebot_plugin_setu_collection)_ 就是这样做的
+
+## 使用 CloversClient 配置加载 clovers 插件
+
+<details open>
+
+<summary> 使用 Clovers CLI </summary>
+
+在 NoneBot 项目下执行
+
+```bash
+clovers plugin add <插件名>
+```
+
+</details>
+
+<details>
+
+<summary> 手动安装 </summary>
+
+</details>
+
+使用你喜欢的依赖管理器安装 clovers 插件后，在 nb 项目文件夹下创建 clovers.toml, 填写如下配置
 
 ```toml
 # clovers.toml
 [clovers]
-plugins = ["clovers_setu_collection"]
+plugins = ["<插件名>"]
 ```
 
 效果相同
 
-## 发生了什么
-
-`nonebot_plugin_clovers` 是一个寄生在 NoneBot 框架下 clovers 客户端，具体实现见[NoneBot Clovers Client](/nonebot-plugin-clovers.md)
-
-通过 NoneBot2 的响应器获取指令使 clovers 实例内插件响应
-
-但是 clovers 的理念是完全的自定义，所以 `nonebot_plugin_clovers` 仅作为一种示范，不作为任何标准。
-
-更推荐的是自行[编写适配器](#适配器-adapter)
-
 # 插件 Plugin
 
-编写一个模块，这个模块需要包含一个`__plugin__`属性，这个属性是一个 plugin.Plugin 实例
+编写一个模块，这个模块需要包含一个 `__plugin__` 属性，这个属性是一个 plugin.Plugin 实例
 
 关于 Plugin 类的详细介绍可以参考[文档](/document)
 
@@ -144,15 +225,15 @@ async def _(event: Event):
 
 ## 创建 Plugin 实例的参数
 
-| 参数名       | 类型                             | 描述                                   |
-| ------------ | -------------------------------- | -------------------------------------- |
-| name         | str                              | 插件名称                               |
-| priority     | int                              | 插件优先级                             |
-| block        | bool                             | 如果本插件有响应，是否阻断后续插件触发 |
-| build_event  | Optional[Callable[[Event],Any]]  | 构建 event 的方法                      |
-| build_result | Optional[Callable[[Any],Result]] | 构建 result 的方法                     |
+| 参数名       | 类型                              | 描述                                   |
+| ------------ | --------------------------------- | -------------------------------------- |
+| name         | str                               | 插件名称                               |
+| priority     | int                               | 插件优先级                             |
+| block        | bool                              | 如果本插件有响应，是否阻断后续插件触发 |
+| build_event  | Optional[Callable[[Event], Any]]  | 构建 event 的方法                      |
+| build_result | Optional[Callable[[Any], Result]] | 构建 result 的方法                     |
 
-如果你不想在任务函数内使用原始的 event,你也可以自建 event 类,然后在创建 plugin 实例时注入 build_event 方法。
+如果你不想在任务函数内使用原始的 event, 你也可以自建 event 类, 然后在创建 plugin 实例时注入 build_event 方法。
 
 ```python
 from clovers import Plugin, Event as CloversEvent
@@ -174,7 +255,7 @@ class Event:
 
 plugin = Plugin(build_event=lambda event: Event(event))
 
-@plugin.handle(["测试"],["user_id"])
+@plugin.handle(["测试"], ["user_id"])
 async def _(event: Event):
     print(event.user_id) # "123456"
 ```
@@ -223,7 +304,7 @@ async def _(event: Event):
 
 ```python
 # 触发指令为"你好 世界"时，输出 ["世界"]
-# 触发指令为"helloworld with extra args"时，输出 ["world","with","extra","args"]
+# 触发指令为"helloworld with extra args"时，输出 ["world", "with", "extra", "args"]
 @plugin.handle(["你好", "hello"])
 async def _(event: Event):
     print(event.args)
@@ -234,9 +315,9 @@ async def _(event: Event):
 如果成功触发响应，那么 event.args 会是正则字符串中的 group 列表
 
 ```python
-# 触发指令为"i love you"时，输出 ["i "," you"] 使用时注意去掉参数里的空格
-# 触发指令为"you love me"时,输出 ["you "," me"]
-# 触发指令为"make love"时,输出 ["make ", None]
+# 触发指令为"i love you"时，输出 ["i ", " you"] 使用时注意去掉参数里的空格
+# 触发指令为"you love me"时, 输出 ["you ", " me"]
+# 触发指令为"make love"时, 输出 ["make ", None]
 @plugin.handle(r"^(.+)love(.*)")
 async def _(event: Event):
     print(event.args)
@@ -244,11 +325,11 @@ async def _(event: Event):
 
 ## 指令-响应任务的响应
 
-指令-响应任务函数的返回值可以是任意类型,这个返回值会发送给 build_result 方法构建成 Result 实例。
+指令-响应任务函数的返回值可以是任意类型, 这个返回值会发送给 build_result 方法构建成 Result 实例。
 
 如果你的插件的 build_result is None 那你就必须返回一个 Result 实例。
 
-就像你的 build_event is None ,你的参数会是原始的 Event 实例那样。
+就像你的 build_event is None, 你的参数会是原始的 Event 实例那样。
 
 关于 Result 类的详细介绍可以参考[文档](/document)
 
@@ -412,19 +493,22 @@ default_config = {"nickname": "小叶子", "timeout": 600}
 config_data.update({k: v for k, v in default_config.items() if k not in config_data})
 ```
 
-当然，更推荐的做法是
+当然，更推荐的做法是使用 pydantic 进行类型验证。
 
 ```python
 from pydantic import BaseModel
 from clovers.config import Config as CloversConfig
 
-class Config(BaseModel):
-    nickname: str = "小叶子"
-    timeout: int = 600
 
-config_data = CloversConfig.environ().setdefault(__package__, {})
-config = Config.model_validate(config_data)
-config_data.update(config.model_dump())
+class Config(BaseModel):
+    ...
+
+    @classmethod
+    def sync_config(cls):
+        """获取 `CloversConfig.environ()[__package__]` 配置并将默认配置同步到全局配置中。"""
+        __config_dict__: dict = CloversConfig.environ().setdefault(__package__, {})
+        __config_dict__.update((__config__ := cls.model_validate(__config_dict__)).model_dump())
+        return __config__
 ```
 
 为了更方便的修改配置，你可以保存当前的配置，这样所有配置项都会出现在配置文件里
@@ -520,7 +604,7 @@ call_method 注册的方法只接受位置参数
 
 此外 send_method 也会注册 call_method 方法，但是 send_method 只接受一个参数，也就是返回值 Result 实例的 data 部分
 
-如果希望发送 "你好，世界" ,你除了可以让函数返回 `Result("text", "你好，世界")`之外，你也可以这样用
+如果希望发送 "你好，世界", 你除了可以让函数返回 `Result("text", "你好，世界")`之外，你也可以这样用
 
 ```python
 @plugin.handle(["测试"])
@@ -557,8 +641,8 @@ class AdapterProtocol:
 class PluginProtocol:
     user_id: str | int
 
-print(check_compatible(AdapterProtocol,PluginProtocol)) # True
-print(check_compatible(PluginProtocol,AdapterProtocol)) # False
+print(check_compatible(AdapterProtocol, PluginProtocol)) # True
+print(check_compatible(PluginProtocol, AdapterProtocol)) # False
 ```
 
 `check_compatible` 只会检查两个协议都有的字段，如果插件声明了适配器不存在的字段，初始化行为是未定义而非不兼容
@@ -681,10 +765,9 @@ clovers.logger.logger 实际上是 logging.getLogger("clovers")，请依据需�
 
 ```python
 class Client(CloversClient):
-    intents = Intents(public_guild_messages=True, public_messages=True)
     async def run(self):
         async with self:
-            async with QQBotClient(intents) as client:
+            async with QQBotClient(Intents(public_guild_messages=True, public_messages=True)) as client:
                 await client.start(appid=appid, secret=secret)
 async def main():
     await Client().run()
@@ -701,7 +784,7 @@ async def main():
             await qq_bot_client.start(appid=appid, secret=secret)
 ```
 
-在寄生的情况下如果没有合适的地方使用 Client 上下文也可以像 nonebot_plugin_clovers 使用这种方式
+在寄生的情况下如果没有合适的地方使用 async with 上下文也可以使用 hook 的方式
 
 ```python
 from nonebot import get_driver
