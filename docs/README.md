@@ -162,8 +162,6 @@ clovers plugin add <插件名>
 
 <summary> 手动安装 </summary>
 
-</details>
-
 使用你喜欢的依赖管理器安装 clovers 插件后，在 nb 项目文件夹下创建 clovers.toml, 填写如下配置
 
 ```toml
@@ -173,6 +171,8 @@ plugins = ["<插件名>"]
 ```
 
 效果相同
+
+</details>
 
 # 插件 Plugin
 
