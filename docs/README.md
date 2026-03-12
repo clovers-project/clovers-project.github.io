@@ -46,6 +46,17 @@ poetry add clovers
 
 使用 Clovers CLI
 
+_在使用前需要安装 Clovers CLI 安装方法见[此处](/clovers-cli.md)_
+
+```bash
+clovers create <项目名称>
+cd <项目名称>
+clovers plugin add <插件名>
+clovers run
+```
+
+下面是一个示例：创建一个使用 `onebot` 协议的 `clovers` 项目
+
 <script>
   const link = document.createElement("link");
   link.rel = "stylesheet";
@@ -68,15 +79,6 @@ poetry add clovers
     );
   };
 </script>
-
-```bash
-clovers create <项目名称>
-cd <项目名称>
-clovers plugin add <插件名>
-clovers run
-```
-
-下面是一个示例：创建一个使用 `onebot` 协议的 `clovers` 项目
 
 <div id="create" style="width: 50vw"></div>
 
@@ -518,6 +520,16 @@ class Config(BaseModel):
 async def _():
     clovers_config.save()
 ```
+
+## 插件间的依赖
+
+当插件依赖其他 clovers 插件时，你除了需要 import 你需要的对象外，你还需要用插件的 require 方法来声明依赖。
+
+```python
+plugin.require("clovers-apscheduler")
+```
+
+**注意：声明依赖只针对 clovers 插件，不要利用 require 方法声明一般 python 模块**
 
 # 适配器 Adapter
 
