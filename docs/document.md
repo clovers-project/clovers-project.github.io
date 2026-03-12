@@ -219,6 +219,18 @@ def set_protocol(key: Literal["properties", "sends", "calls"], data: type)
 - `key` _Literal["properties", "sends", "calls"]_ - 协议位置
 - `data` _type_ - 协议类型，包含字段和声明的类型
 
+### require
+
+```python
+def require(plugin_name: str)
+```
+
+声明依赖的插件
+
+**Arguments**:
+
+- `plugin_name` _str_ - 插件名称
+
 ### startup
 
 ```python
