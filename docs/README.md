@@ -192,13 +192,13 @@ def _():
 
 
 # 关闭时的任务
-@plugin.shutdown
+@PLUGIN.shutdown
 def _():
     print(f"{PLUGIN.name} 关闭")
 
 
 # 指令-响应任务
-@plugin.handle(["测试"])
+@PLUGIN.handle(["测试"])
 async def _(event: Event):
     pass
 ```
@@ -306,10 +306,10 @@ def build_result(result):
     return result
 
 
-plugin = Plugin(build_result=build_result)
+PLUGIN = Plugin(build_result=build_result)
 
 
-@plugin.handle(["测试"])
+@PLUGIN.handle(["测试"])
 async def _(event: Event):
     return "你好"  # 这里 CloversCore 会接收到 Result("text", "你好")
 ```
@@ -328,7 +328,7 @@ PLUGIN.handle 装饰器的 `command` 参数类型为 `str | Iterable[str] | re.P
 ```python
 # 触发指令为"你好 世界"时，输出 ["世界"]
 # 触发指令为"helloworld with extra args"时，输出 ["world", "with", "extra", "args"]
-@plugin.handle(["你好", "hello"])
+@PLUGIN.handle(["你好", "hello"])
 async def _(event: Event):
     print(event.args)
 ```
@@ -339,7 +339,7 @@ async def _(event: Event):
 # 触发指令为"i love you"时，输出 ["i ", " you"] 使用时注意去掉参数里的空格
 # 触发指令为"you love me"时, 输出 ["you ", " me"]
 # 触发指令为"my love"时, 输出 ["my ", None]
-@plugin.handle(r"^(.+)love(.*)")
+@PLUGIN.handle(r"^(.+)love(.*)")
 async def _(event: Event):
     print(event.args)
 ```
@@ -403,7 +403,7 @@ PLUGIN.handle 装饰器的 `rule` 参数类型为 `Rule.Ruleable | Rule | None`
 下面是一个通过 rule 定义为必须 @机器人才能触发的任务
 
 ```python
-@plugin.handle(
+@PLUGIN.handle(
     ["其他功能"],
     properties=["to_me"],
     rule=lambda e: e.to_me,
@@ -462,7 +462,7 @@ _当并发执行的任务存在不同的阻断规则时，合并的阻断规则�
 接下来的示例是指令为 "测试" 回应 "你好" 的 插件指令-响应任务
 
 ```python
-@plugin.handle(["测试"])
+@PLUGIN.handle(["测试"])
 async def _(event: Event):
     return Result("text", "你好")
 ```
@@ -476,7 +476,7 @@ async def _(event: Event):
 这样的话，你也可以使用 call 方法
 
 ```python
-@plugin.handle(["测试"], ["at"])
+@PLUGIN.handle(["测试"], ["at"])
 async def _(event: Event):
     at_user_id = event.properties["at"]
     # print(event.properties["group_id"]) # KeyError
@@ -556,11 +556,11 @@ PLUGIN.require("clovers-apscheduler")
 
 # 编写 Clovers 适配器
 
+**注意: 适配器是针对于特定 CloversCore 类的，而 CloversCore 是一个抽象类。因此在编写适配器时你必须清楚该 CloversCore 实现都给了适配器哪些参数。**
+
 在任意 Python 导入路径下，只要包含名为 `ADAPTER` 且类型为 `Adapter` 实例的属性，都可作为 Clovers 适配器加载。
 
 关于适配器的配置，我们推荐使用 `Config` 类（参考[配置文件](#配置文件)章节）
-
-**注意: 适配器是针对于特定 CloversCore 类的，而 CloversCore 是一个抽象类。因此在编写适配器时你必须清楚该 CloversCore 实现都给了适配器哪些参数。**
 
 ```python
 from clovers import Adapter
@@ -639,7 +639,7 @@ _注意由于 Clovers 框架的限制 `call_method` 注册的方法只接受位�
 
 _其实 `property_method` 与 `call_method` 只是名字不一样_
 
-# 类型协议 CloversProtocol
+# 类型协议
 
 适配器方法会根据插件声明的参数构建参数，处理响应结果。但是同名参数不一定是兼容的
 
@@ -714,127 +714,185 @@ PLUGIN.protocol = Event
 
 _根据惯用例，作为类型协议的类还会被当做 event 参数的类型标注。_
 
-# 响应处理器 Leaf
+# 响应处理器
 
-Leaf 是一个用于处理适配器与插件的响应处理器基类。
+`CloversCore` 是整个框架的消息调度中心，它作为一个抽象基类，作用为与底层平台交互，并为响应器提供所需要的参数。
 
-继承这个类并实现 extract_message 方法即可创建一个可用的响应处理器
+## 响应处理器的入口
 
-extract_message 接受的参数来自调用 response 方法时转入的参数，一般来说不同运行例有不同的参数。
+`CloversCore.dispatch` 是 Clovers 框架的入口，在任何实现中，外部驱动都需要以关键字参数的形式为 `dispatch` 传入所有需要的数据。
+
+`CloversCore.dispatch` 返回一个 `Task[int] | None` 如果返回 `None` 则表示 dispatch 被跳过，`await task` 返回的 `int` 表示 dispatch 触发的 `handle` 个数。
+
+这是 `nonebot-plugin-clovers` 中，NoneBot 驱动 Clovers 的入口:
 
 ```python
-from clovers import Leaf as BaseLeaf
-
-
-class MyLeaf(BaseLeaf):
-    def extract_message(self, state: dict, **ignore):
-        inputs = state.get("message")
-        if inputs is None:
-            return None
-        if inputs.startswith(Bot_Nickname):
-            inputs = inputs.lstrip(Bot_Nickname)
-            state["to_me"] = True
-        return inputs
+async def handler(bot, event, matcher):
+    if (coro := self.dispatch(bot=bot, event=event)) and await coro:
+        matcher.stop_propagation()
 ```
 
-使用方法
+_NoneBot 为 `dispatch` 提供了 `bot` 和 `event` 参数，这意味着 Clovers 适配器可以使用这两个参数实现 NoneBot 绝大部分与协议端的交互。_
+
+这是简化的 `clovers-client.onebot.v11` 中，websockets 驱动 Clovers 的入口:
 
 ```python
-leaf = MyLeaf("Sample")
-
-asyncio.create_task(leaf.response(state=state, others=others))
-
+while self._ready:
+    ...
+    async for recv_data in ws_connect:
+        recv = json.loads(recv_data)
+        if not recv.get("post_type") == "message":
+            continue
+        self.dispatch(call=self.call_api, recv=recv, client=self)
+    ...
 ```
 
-这样就会触发响应
+_主循环会为 `dispatch` 提供 `call_api` 的能力与 `ws_connect` 收到的消息体。_
 
-# 客户端 Client
+## 消息提取
 
-上述响应处理器触发响应的代码一般是在某个循环里面持续运行，下面例举使用 clovers 客户端的情况。
+`CloversCore.extract_message` 是 `CloversCore` 唯一的抽象方法，其参数是 `CloversCore.dispatch` 接收的所有关键字参数。
 
-clovers 框架提供了 `Client` 类，用于编写 clovers 客户端。
+你需要根据当前适配的平台规则，使用**所有**这些参数并从中提取出一个 `str` 格式的纯文本信息信息用来触发插件匹配，或者返回一个 `None` 来跳过 dispatch。
 
-下面是 clovers_client 模块里面 onebot_v11 客户端的简化实现方法
+**再次强调：即使用不到某些参数，`CloversCore.extract_message` 也必须接收所有 `CloversCore.dispatch` 传入的参数。**
 
-```python
-from clovers import Client as CloversClient
+## 启动与停止
 
+在进行 `dispatch` 之前，`CloversCore` 必须被启动，而在关闭实例时，`CloversCore` 应该被停止。
 
-class MyClient(CloversClient):
-    def __init__(self, url: str, ws_url: str, name="OneBot V11"):
-        super().__init__()
-        self.name = name
-        self.url = url
-        self.client = httpx.AsyncClient()
-        self.ws_connect = websockets.connect(ws_url)
+_更准确的说，`startup` 包含初始化逻辑，必须被执行。而 `shutdown` 仅做了等待未完成事件与触发插件 `shutdown` 任务。假如 Clovers 是一个 forever loop 那么 `shutdown` 其实并不是很重要。_
 
-    async def post(self, endpoint: str, **kwargs) -> dict:
-        resp = await self.client.post(url=f"{self.url}/{endpoint}", **kwargs)
-        resp = resp.json()
-        return resp
+启动与关闭的方法有异步上下文与函数调用两种。
 
-    async def run(self):
-        ws = await self.ws_connect
-        async with self:
-            async with self.client:
-                while self.running:
-                    async for recv in ws:
-                        asyncio.create_task(leaf.response(post=self.post, recv=json.loads(recv)))
-        await ws.close()
+1. 异步上下文
 
-```
+   ```python
+   clovers: CloversCore = ...
 
-## 运行
+   async with clovers:
+       ...
+   ```
 
-```python
+   一般用于 `CloversCore` 自行管理生命周期的独立客户端场景。
 
-# 配置日志记录器，不配置可能无法输出日志
+2. 函数调用
 
-from clovers.logger import logger as clovers_logger
-clovers_logger.setLevel(log_level)
-clovers_logger.addHandler(hdlr)
+   ```python
+   clovers: CloversCore = ...
 
-# 进行各种配置
+   await clovers.startup()
+   ...
+   await clovers.shutdown()
+   ```
 
-asyncio.run(MyClient().run())
-```
+   一般用于 `CloversCore` 被其他框架管理生命周期的寄生场景。
 
-clovers.logger.logger 实际上是 logging.getLogger("clovers")，请依据需求配置
+## 多核响应处理器
 
-## 寄生
+多核响应处理器 `CloversMultiCore` 是一个非常简单的类，其内部有多个 `CloversCore` 实例，用于多平台场景。
 
-寄生依然需要配置日志记录器，但不执行 run 方法
+多核响应处理器的实例化参数是多个 `CloversCore` 实例，这些实例会形成一个元组存在在 `CloversMultiCore.cores` 中。
 
-根据下面是 QQbot PythonSDK 独立运行和寄生的区别
+`CloversMultiCore.locate_core` 是其唯一抽象方法，用于根据 `CloversCore.dispatch` 传入的参数，返回针对于这个参数的 `CloversCore` 实例。
+
+归功于这种机制，每次 `CloversMultiCore.dispatch` 只能由一个 `CloversCore` 响应。
+
+# 最小可运行示例
+
+本章是一个最简单的 Clovers 框架实现，包含适配器，插件，响应处理器，类型提示和协议。
 
 ```python
-class Client(CloversClient):
-    async def run(self):
-        async with self:
-            async with QQBotClient(Intents(public_guild_messages=True, public_messages=True)) as client:
-                await client.start(appid=appid, secret=secret)
-async def main():
-    await Client().run()
-```
+# main.py
+from clovers import CloversCore
+from my_adapter import ADAPTER
+from my_plugin import PLUGIN
 
-```python
-class Client(CloversClient):
-    async def run(self):
-        raise RuntimeError("寄生客户端不支持运行")
+
+class MyClovers(CloversCore):
+    def extract_message(self, message: str, **ignore):
+        return message
+
 
 async def main():
-    async with QQBotClient(Intents(public_guild_messages=True, public_messages=True)) as qq_bot_client:
-        async with Client():
-            await qq_bot_client.start(appid=appid, secret=secret)
+    clovers = MyClovers("MyClovers")
+    clovers.adapter.mixin(ADAPTER)
+    clovers.plugins.append(PLUGIN)
+    async with clovers:
+        while True:
+            coro = clovers.dispatch(message=input("请输入消息："), bot_nickname="MyBot")
+            if coro:
+                await coro
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
 ```
 
-在寄生的情况下如果没有合适的地方使用 async with 上下文也可以使用 hook 的方式
+这是 `my_adapter.py` 内定义的适配器，用三种装饰器添加了三种方法。
 
 ```python
-from nonebot import get_driver
+# my_adapter.py
+from datetime import datetime
+from clovers import Adapter
 
-clovers_client = Client()
 
-get_driver().on_startup(clovers_client.startup)
-get_driver().on_shutdown(clovers_client.shutdown)
+ADAPTER = Adapter("MyAdapter")
+
+
+@ADAPTER.send_method("text")
+async def _(text: str, /):
+    print(text)
+
+
+@ADAPTER.property_method("bot_nickname")
+async def _(bot_nickname: str) -> str:
+    return bot_nickname
+
+
+@ADAPTER.call_method("datetime")
+async def _(format: str) -> str:
+    return datetime.now().strftime(format)
+
+```
+
+这是 `my_plugin.py` 内定义的插件，包含类型提示和协议。
+
+```python
+from clovers import EventType, Plugin, Result
+from typing import Protocol, Literal
+
+
+class Event(EventType, Protocol):
+    bot_nickname: str
+
+    async def send(self, key: Literal["text"], data: str): ...
+
+    async def call(self, key: Literal["datetime"], format: str) -> str: ...
+
+
+PLUGIN = Plugin[Event]("MyPlugin", build_result=lambda data: Result("text", data))
+PLUGIN.protocol = Event
+
+
+@PLUGIN.startup
+def _():
+    print(f"{PLUGIN.name} 启动")
+
+
+@PLUGIN.handle(["测试"], ["bot_nickname"])
+async def _(event: Event):
+    await event.send("text", f"Hello, {event.bot_nickname}")
+    return f"现在的时间是：{await event.call("datetime","%Y-%m-%d %H:%M:%S")}"
+```
+
+运行结果：
+
+```txt
+MyPlugin 启动
+请输入消息：测试
+Hello, MyBot
+现在的时间是：2026-04-12 01:18:28
+请输入消息：
 ```
