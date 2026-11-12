@@ -16,35 +16,27 @@ _✨ 高度自定义的聊天平台 Python 异步机器人指令-响应插件框
 
 # 其他的介绍
 
-- Leaf 负责单个适配器下插件的响应，Client 负责管理插件的启动和运行逻辑。上述类型为基类。
-- 如果需要创建只有一个适配器的客户端可以在实现类里面同时继承 (Leaf, Client), 也可以继承 LeafClient。
+- 欢迎使用 [clovers-client](./clovers-client) 快速创建一个 Clovers 机器人。
 - 在响应器中使用到的额外参数都需要在注册响应器时声明
 - 除了指令字符串，其他所有事件信息都是额外参数，需要自定义获取方法。
 - 项目的主题色是 <span style="color:#FFFFFF;background-color:#00CC33;">#00CC33</span> 🍀
 
-# 安装
-
-<details open>
-<summary>pip</summary>
-
-```bash
-pip install clovers
-```
-
-</details>
-
-<details>
-<summary>poetry</summary>
-
-```bash
-poetry add clovers
-```
-
-</details>
-
 # 快速开始
 
-使用 Clovers CLI
+## 安装 Clovers CLI
+
+## 创建一个 Clovers 机器人项目
+
+_在使用前需要安装 Clovers CLI 安装方法见[此处](/clovers-cli.md)_
+
+```bash
+clovers create <项目名称>
+cd <项目名称>
+clovers plugin add <插件名>
+clovers run
+```
+
+下面是一个示例：创建一个使用 `onebot` 协议的 `clovers` 项目
 
 _在使用前需要安装 Clovers CLI 安装方法见[此处](/clovers-cli.md)_
 
@@ -67,14 +59,14 @@ clovers run
   script.src = "asserts/asciinema-player.min.js";
   document.body.appendChild(script);
   asciinema_config = {
-    cols: 128, 
-    rows: 24, 
-    theme: "nord", 
+    cols: 128,
+    rows: 24,
+    theme: "nord",
   };
   script.onload = () => {
     window.AsciinemaPlayer.create(
-      "/casts/create.cast", 
-      document.getElementById("create"), 
+      "/casts/create.cast",
+      document.getElementById("create"),
       asciinema_config
     );
   };
@@ -86,248 +78,391 @@ _示例中提示报错是由于未连接到协议服务端。如果在 `ws://127
 
 # 使用 NoneBot2 框架
 
-1. [NoneBot Clovers Client](/nonebot-plugin-clovers.md) 是一个寄生在 NoneBot 框架下 clovers 客户端，包名为 `nonebot_plugin_clovers` 属于 NoneBot 插件。
-
-2. NoneBot Clovers Client 会在 NoneBot 项目中运行一个 CloversClient 实例, 通过 NoneBot2 的响应器获取指令使 clovers 实例内插件响应。
-
-3. 安装 `nonebot_plugin_clovers` 插件的 NoneBot 项目本身可视为一个 Clovers 项目。
-
-下面以 Nonebot2 框架作为宿主, 并且使用 `nonebot.adapters.onebot.v11` 适配器和 `nonebot_plugin_clovers` 插件为例。
-
-_NoneBot Clovers Client 的[配置项](/nonebot-plugin-clovers?id=配置插件) 使用了 `nonebot_plugin_clovers.adapters.onebot.v11` 但是 clovers 的理念是完全的自定义，所以 `nonebot_plugin_clovers` 内部的自带的适配器仅作为一种示范，不作为任何标准，更推荐的是自行[编写适配器](#适配器-adapter)_
-
-## 安装 NoneBot Clovers Client
-
-<details open>
-
-<summary> 使用 nb-cli (推荐) </summary>
-
 在 NoneBot 项目路径下执行以下命令安装 `nonebot_plugin_clovers` 插件。
 
 ```bash
 nb plugin install nonebot-plugin-clovers
 ```
 
-</details>
+随后在 NoneBot 项目的 `.env` `.env.dev` `.env.prod` 之一添加以下配置项
 
-<details>
-
-<summary> 手动安装 </summary>
-
-使用一个你喜欢的包管理器安装 nonebot-plugin-clovers
-
-```bash
-pip install nonebot-plugin-clovers
+```dotenv
+# 协议端是否在本地运行，如协议端不在本地，那么机器人发送的 file 类型资源会转换成 base64 资源
+CLOVERS__IS_LOCAL=true
+# 使用的适配器， ~代表内置适配器
+CLOVERS__USING_ADAPTERS=["~uninfo"]
+# clovers 的优先级
+CLOVERS__PRIORITY=100
+# 加载的 plugins 插件
+CLOVERS__PLUGINS=["clovers-aichat", "clovers-divine"]
+# 加载的 plugins 本地插件位置
+CLOVERS__PLUGIN_DIRS=["./src/clovers/plugins"]
 ```
 
-打开 NoneBot 项目目录下的 pyproject.toml 文件，添加 nonebot_plugin_clovers 到 plugins
+_示例中 NoneBot Clovers Client 的[配置项](/nonebot-plugin-clovers?id=配置插件) 使用了 `nonebot_plugin_clovers.adapters.uninfo`_
 
-```toml
-# pyproject.toml
-[tool.nonebot]
-...
-plugins = ["nonebot_plugin_clovers"]
-```
-
-</details>
-
-## 使用 NoneBot 插件加载 clovers 插件
-
-创建一个 NoneBot 项目之后在 `\src\plugins` 新建一个 nb 本地插件（本地插件的位置是你指定的）
-
-例如你创建的项目名为 `connect_to_clovers.py`
-
-```python
-from nonebot import require
-
-require("nonebot_plugin_clovers").client.load_plugin("clovers_setu_collection")
-# 你还可以继续加载其他插件
-```
-
-_这样你就成功加载了 [clovers_setu_collection](https://github.com/clovers-project/clovers-setu-collection) 作为 Nonebot 插件, [nonebot_plugin_setu_collection](https://github.com/KarisAya/nonebot_plugin_setu_collection)_ 就是这样做的
-
-## 使用 CloversClient 配置加载 clovers 插件
-
-<details open>
-
-<summary> 使用 Clovers CLI </summary>
-
-在 NoneBot 项目下执行
-
-```bash
-clovers plugin add <插件名>
-```
-
-</details>
-
-<details>
-
-<summary> 手动安装 </summary>
-
-使用你喜欢的依赖管理器安装 clovers 插件后，在 nb 项目文件夹下创建 clovers.toml, 填写如下配置
+在 NoneBot 项目根目录创建 `clovers.toml` 文件，并填写以下内容
 
 ```toml
 # clovers.toml
 [clovers]
-plugins = ["<插件名>"]
+plugins = ["clovers-aichat", "clovers-divine"]
+plugin_dirs = ["./src/clovers/plugins"]
 ```
 
-效果相同
+- 安装 `nonebot_plugin_clovers` 插件的 NoneBot 项目本身可视为一个 Clovers 项目。
 
-</details>
+- [NoneBot Clovers Client](/nonebot-plugin-clovers.md) 是一个寄生在 NoneBot 框架下 clovers 客户端，包名为 `nonebot_plugin_clovers` 属于 NoneBot 插件。
 
-# 插件 Plugin
+- NoneBot Clovers Client 会在 NoneBot 项目中运行一个 CloversCore 实例, 通过 NoneBot2 的响应器获取指令使 clovers 实例内插件响应。
 
-编写一个模块，这个模块需要包含一个 `__plugin__` 属性，这个属性是一个 plugin.Plugin 实例
+# 配置文件
 
-关于 Plugin 类的详细介绍可以参考[文档](/document)
+你可以用任何你你喜欢的方式配置你的项目，但 clovers 提供了一个 `Config` 类。
+
+clovers 项目的配置文件为项目根目录下的 `clovers.toml`
+
+在项目的 `clovers.toml` 文件中添加配置（示例）如下：
+
+```toml
+[clovers_plugin_demo] # 这里是你的包名
+nickname = "小叶子"
+```
+
+`Config` 是一个字典的子类，通过调用 `Config.environ()` 获取全局配置实例。
+
+我们建议使用包名当键，你可以用以下方式获取你的配置。
+
+```python
+config = Config.environ()
+plugin_config = config[__package__]
+nickname = plugin_config["nickname"] # 这里会读到你的配置：小叶子
+```
+
+上面是一个简单的例子，其实我们更推荐的做法是使用 pydantic 进行类型验证。
+
+```python
+from pydantic import BaseModel
+from clovers.config import Config as CloversConfig
+
+
+class Config(BaseModel):
+    nickname: str = "bot"
+
+    @classmethod
+    def sync_config(cls, config_key: str):
+        clovers_config: dict = CloversConfig.environ().setdefault(config_key, {})
+        clovers_config.update((__config := cls.model_validate(clovers_config)).model_dump())
+        return __config
+
+
+assert __package__ # 你的项目不会被作为脚本执行，所以这里一定不是 None
+config = Config.sync_config(__package__)
+nickname = config.nickname
+```
+
+你可以保存当前的配置。当然这只有你在代码中修改过配置才有意义。
+
+```python
+Config.environ().save()
+```
+
+# 编写 Clovers 插件
+
+在任意 Python 导入路径下，只要包含名为 `PLUGIN` 且类型为 `Plugin` 实例的属性，都可作为 Clovers 插件加载。
+
+关于插件的配置，我们推荐使用 `Config` 类（参考[配置文件](#配置文件)章节）
 
 ## 开始
 
-```python
-from clovers import Plugin
-
-plugin = Plugin()  # 创建 Plugin 实例
-
-__plugin__ = plugin  # 暴露 __plugin__ 属性
-```
-
-你可以给插件添加多个任务，当 clovers 运行时，这些任务就会生效。
-
-```python
-# 启动时的任务
-@plugin.startup
-async def _():
-    pass
-
-
-# 关闭时的任务
-@plugin.shutdown
-async def _():
-    pass
-
-
-# 指令-响应任务
-@plugin.handle(["测试"])
-async def _(event: Event):
-    pass
-```
-
-你也可以使用为其他插件的`__plugin__`属性添加响应
-
-```python
-from some_plugin import __plugin__ as plugin
-
-
-# do something
-@plugin.handle(["其他测试"])
-async def _(event: Event):
-    pass
-```
-
-## 创建 Plugin 实例的参数
-
 | 参数名       | 类型                              | 描述                                   |
 | ------------ | --------------------------------- | -------------------------------------- |
-| name         | str                               | 插件名称                               |
+| name         | Optional[str]                     | 插件名称                               |
 | priority     | int                               | 插件优先级                             |
 | block        | bool                              | 如果本插件有响应，是否阻断后续插件触发 |
 | build_event  | Optional[Callable[[Event], Any]]  | 构建 event 的方法                      |
 | build_result | Optional[Callable[[Any], Result]] | 构建 result 的方法                     |
 
-如果你不想在任务函数内使用原始的 event, 你也可以自建 event 类, 然后在创建 plugin 实例时注入 build_event 方法。
+1. name 插件名称，默认为空，在 startup 后会更新为插件所在导入路径名
+2. priority 插件优先级，默认为 0
+3. block 默认为 True，但响应任务可单独定义是否阻断后续插件触发
+4. build_event 构建 event 的方法。如果你不想在任务函数内使用原始的 event 可以用 build_event 对 event 进行处理。
+5. build_result 构建 result 的方法，如果你觉得返回 Result 实例太过繁琐，你可以使用 build_result 方法对任务返回值进行再处理。
 
-```python
-from clovers import Plugin, Event as CloversEvent
-class Event:
-    def __init__(self, event: CloversEvent):
-        self.event: CloversEvent = event
-
-    @property
-    def raw_command(self):
-        return self.event.raw_command
-
-    @property
-    def args(self):
-        return self.event.args
-
-    @property
-    def user_id(self) -> str:
-        return self.event.properties["user_id"]
-
-plugin = Plugin(build_event=lambda event: Event(event))
-
-@plugin.handle(["测试"], ["user_id"])
-async def _(event: Event):
-    print(event.user_id) # "123456"
-```
-
-`build_result` result 的构建方法
-
-当然如果你认为返回 Result 实例太过繁琐，你也可以使用 build_result 方法
+PLUGIN 实例有三个装饰器，分别为启动、关闭、指令-响应任务。
 
 ```python
 from clovers import Plugin
+
+PLUGIN = Plugin("MyPlugin")  # 创建 Plugin 实例
+
+# 启动时的任务
+@PLUGIN.startup
+def _():
+    print(f"{PLUGIN.name} 启动")
+
+
+# 关闭时的任务
+@PLUGIN.shutdown
+def _():
+    print(f"{PLUGIN.name} 关闭")
+
+
+# 指令-响应任务
+@PLUGIN.handle(["测试"])
+async def _(event: Event):
+    pass
+```
+
+## 启动/关闭任务
+
+- 使用 @PLUGIN.startup 装饰的函数会在 CloversCore 启动时触发执行
+- 使用 @PLUGIN.shutdown 装饰的函数会在 CloversCore 关闭时触发执行
+- 启动/关闭任务没有参数
+- 如果启动/关闭任务是一个异步函数，那么 CloversCore 会等待其执行完毕
+- 注意：即使存在多个加载本插件的 CloversCore 实例（如 CloversMuliCore），启动/关闭任务也只会执行一次
+
+## 指令-响应任务
+
+使用 @PLUGIN.handle 装饰的函数会在 CloversCore 收到与插件匹配的指令时触发执行
+
+### 指令-响应任务的参数
+
+除非你定义了插件的 `build_event`，PLUGIN.handle 装饰的函数的参数是一个 `Event` 类型的实例。
+
+**Event 实例属性与方法介绍：**
+
+- 属性
+  - `message` 类型为 `str`: 触发响应的信息原文。
+  - `args` 类型为`list[str]`: 从原文中解析的指令参数。将会在下面的[指令](#指令-响应任务的指令)章节进行介绍。
+  - `properties` 额外属性: event 会有该任务的装饰器 `properties` 参数添加的属性，详见[获取平台参数](#指令-响应任务获取平台参数)。
+- 方法
+  - `call` 定义为 `def call(key: str, *args) -> Coroutine | None: ...`
+    - `event.call` 会调用适配器同名的 call 方法。
+    - `key` 参数是适配器 call 方法注册的 `key`。
+    - `*args` 是传入适配器的参数，传入适配器的参数只能是位置参数。
+    - 如果 `event.call` 返回了 `None` 则表示适配器不存在同名 call 方法。
+    - 如果 `event.call` 返回了一个 `Coroutine`，则 `await` 后返回适配器同名 call 方法的返回值。
+  - `send` 定义为 `def send(key: str, message: Any) -> Coroutine[Any, Any, None] | None: ...`
+    - `event.send` 会调用适配器同名的send方法。
+    - `key` 参数是适配器send方法注册的 `key`。当适配器不存在同名send方法时，此方法会返回 `None`。
+    - `message` 传入适配器该方法的参数，表示使用适配器send方法发送的消息。
+    - 如果 `event.send` 返回 `None`，则表示适配器不存在同名 send 方法。
+    - 如果 `event.send` 返回 `Coroutine` 则 `await` 是执行该发送方法，并返回 `None`。
+
+**插件的 build_event 方法：**
+
+build_event 的参数是触发响应的 `Event` 实例。如果你定义了插件的 build_event 方法，任务函数的参数将变为 build_event 的返回值。
+
+下面是一个例子：
+
+```python
+from clovers import Plugin, EventType as Event
+
+
+class MyEvent:
+    def __init__(self, event: Event):
+        self.event = event
+
+    def args_to_int(self):
+        try:
+            return int(self.event.args[0])
+        except (ValueError, IndexError):
+            return 0
+
+
+PLUGIN = Plugin(build_event=MyEvent)
+
+
+@PLUGIN.handle(["测试"])
+async def _(event: MyEvent):
+    print(event.args_to_int()) # 0
+```
+
+_理论上 `build_event` 可以返回任何类型的数据_
+
+### 指令-响应任务的返回值
+
+除非你定义了插件的 `build_result`，PLUGIN.handle 装饰的函数应该返回一个 `Result` 实例或 `None`。
+
+返回值意味着使用适配器向平台发送消息。
+
+**Result 实例属性与方法介绍：**
+
+- 属性
+  - `key`: 响应需要调用的适配器同名 send 方法
+  - `data`: 传入适配器该方法的参数。
+- 方法
+  - `send`: 定义为 `async def send(event: Event) -> None: ...`
+    - `event` 参数是本响应的 `Event` 对象。
+    - 如果适配器不存在 `result.key` 的同名 send 方法则会静默失败。
+
+**插件的 build_result 方法**
+
+`build_result` 需要返回一个 `Result` 实例或 `None`，`build_result` 的参数是 PLUGIN.handle 装饰的函数的返回值。
+
+下面是一个例子，会根据类型自动将数据转换成 Result：
+
+```python
+from clovers import Plugin
+
+
 def build_result(result):
     if isinstance(result, str):
         return Result("text", result)
     if isinstance(result, BytesIO):
         return Result("image", result)
     if isinstance(result, AnyTypeYouNeed):
-        return Result("any_method_you_want", result)
+        return Result("any_you_want", result)
     return result
 
-plugin = Plugin(build_result=build_result)
 
-@plugin.handle(["测试"])
+PLUGIN = Plugin(build_result=build_result)
+
+
+@PLUGIN.handle(["测试"])
 async def _(event: Event):
-    return "你好"
+    return "你好"  # 这里 CloversCore 会接收到 Result("text", "你好")
 ```
 
-## 任务和事件参数
+### 指令-响应任务的指令
 
-`startup` 在插件初始化时执行，无参数。
+PLUGIN.handle 装饰器的 `command` 参数类型为 `str | Iterable[str] | re.Pattern[str] | None`
 
-`shutdown` 在插件关闭时执行，无参数。
+1. 当指令为 `str` 时，handle 装饰器会认为这是一个正则字符串，于是注册为正则匹配
+2. 当指令为 `Iterable[str]` 时，handle 装饰器会认为这是一个指令列表， 于是注册为 str.startswith 匹配。
+3. 当指令为 `re.Pattern[str]` 时，handle 装饰器会认为这是一个正则对象，于是注册为正则匹配
+4. 当指令为 `None` 时，handle 装饰器将其注册为全匹配，所有指令都会触发
 
-`handle` 指令响应任务，由指令触发，获取到事件参数 `event` ， `event`并不是某个特定的类型。而是原始 `Event` 实例发送给 `build_event` 构建的返回值。
-
-由此可见原始 `Event` 类你在指令响应任务的函数中唯一获得的参数，你需要的所有东西都在这里。
-
-关于 Event 类的详细介绍可以参考[文档](/document)
-
-## 指令-响应任务的指令
-
-指令-响应任务的 `commands` 参数可以是字符串，也可以是字符串列表，也可以是一个 re.Pattern 实例
-
-当指令是字符串列表时，handle 装饰器会认为这个指令是一个指令列表，那么它会对字符串进行 startswith 判断。
-
-如果成功触发响应，那么 event.args 会是原指令去掉指令部分后的字符串并按照空格分割为列表。
+指令列表匹配触发了响应时，event.args 会是原指令去掉指令部分后的字符串并按照空格分割为列表。
 
 ```python
 # 触发指令为"你好 世界"时，输出 ["世界"]
 # 触发指令为"helloworld with extra args"时，输出 ["world", "with", "extra", "args"]
-@plugin.handle(["你好", "hello"])
+@PLUGIN.handle(["你好", "hello"])
 async def _(event: Event):
     print(event.args)
 ```
 
-当指令是字符串时，handle 装饰器会认为这个指令是一个正则字符串，那么它会对指令进行正则匹配。
-
-如果成功触发响应，那么 event.args 会是正则字符串中的 group 列表
+正则匹配触发了响应时，event.args 会是正则匹配的groups。
 
 ```python
 # 触发指令为"i love you"时，输出 ["i ", " you"] 使用时注意去掉参数里的空格
 # 触发指令为"you love me"时, 输出 ["you ", " me"]
-# 触发指令为"make love"时, 输出 ["make ", None]
-@plugin.handle(r"^(.+)love(.*)")
+# 触发指令为"my love"时, 输出 ["my ", None]
+@PLUGIN.handle(r"^(.+)love(.*)")
 async def _(event: Event):
     print(event.args)
 ```
 
-## 指令-响应任务的响应
+### 指令-响应任务获取平台参数
 
-指令-响应任务函数的返回值可以是任意类型, 这个返回值会发送给 build_result 方法构建成 Result 实例。
+PLUGIN.handle 装饰器的 `properties` 参数类型为 `Iterable[str]`
+
+event的属性只有 `message` 触发指令的消息 和 `args` 上文所述的从指令中解析出来的参数
+
+当然这些不会是你需要的所有参数。如果你在插件中需要获取一些平台参数，那么需要在注册 plugin.handle 时声明
+
+在 `properties` 中声明的需要的参数会由适配器注入，直接使用未声明的参数会抛出 KeyError
+
+```python
+@PLUGIN.handle(["测试A"], properties=["user_id", "group_id"])
+async def _(event: Event):
+    print(event.user_id)
+    print(event.group_id)
+    print(event.others)  # KeyError
+```
+
+当然你也可以不事先声明，而在函数中直接使用 `event.call` 获取参数
+
+```python
+@PLUGIN.handle(["测试B"], properties=["group_id"])
+async def _(event: Event):
+    coro = event.call("user_id")
+    if coro is None:
+        return
+    user_id = await coro
+    ...
+```
+
+有些方法必须带参数，无法在定义时声明，这时你需要使用 `event.call`
+
+```python
+@PLUGIN.handle(["测试C"], properties=["user_id", "group_id"])
+async def _(event: Event):
+    coro = event.call("group_member_info", "744751179", "1048827424")
+    if coro is None:
+        return
+    member = await coro
+    ...
+```
+
+_以 `event.user_id` 为例，其与 `await event.call("user_id")` 都是适配器中名为 `"user_id"` 的 call 方法的返回值_
+
+### 指令-响应任务的规则
+
+PLUGIN.handle 装饰器的 `rule` 参数类型为 `Rule.Ruleable | Rule | None`
+
+我们常用 `Callable[[Event], bool]` 和 `list[Callable[[Event], bool]]` 两种
+
+- rule 是参数为 `event`，返回值为 `bool` 的**同步**函数, 或**此类函数的列表**。
+- 当装饰器定义了 rule 参数，那么**除了满足指令匹配**，还要让 rule 函数返回 True 才会触发响应
+- 如果是函数列表，则所有函数**全部返回 True** 才会触发响应
+- 传给 rule 的参数是 build_event 的返回值
+- 如果 rule 需要平台参数，那么必须在 `properties` 中声明。
+
+下面是一个通过 rule 定义为必须 @机器人才能触发的任务
+
+```python
+@PLUGIN.handle(
+    ["其他功能"],
+    properties=["to_me"],
+    rule=lambda e: e.to_me,
+    priority=10,
+    block=False,
+)
+async def _(event: Event):
+    pass
+```
+
+### 指令-响应任务的优先级
+
+在多插件环境下，一个指令可能会同时命中多个插件中的多个任务（Handle）。为了精确控制它们的执行顺序，我们需要通过优先级机制进行调度。
+
+Plugin 类构造函数的 `priority` 参数类型为 `int`，定义了插件优先级 (pPri)。
+
+PLUGIN.handle 装饰器的 `priority` 参数类型为 `int`，定义了任务优先级 (hPri)。
+
+**规则**
+
+- 如果一个指令匹配到多个任务，首先比较插件优先级 (pPri)，越小的越先执行。
+- 如果任务的优先级相同，则比较任务优先级 (hPri)，越小的越先执行。
+- 如果任务的pPri与hPri都相同，则会并发执行。
+
+### 指令-响应任务的阻断
+
+如果一个指令同时命中了多个任务，为了精确控制任务执行完成后，后续任务是否继续执行，我们需要通过阻断机制进行控制。
+
+Plugin 类构造函数的 `block` 参数类型为 `bool`，定义了插件级阻断 (pBlk)。
+
+PLUGIN.handle 装饰器的 `block` 参数类型为 `bool | tuple[bool, bool]`
+
+- `block` 为 `bool` 时定义该任务的任务级阻断 (pBlk)
+- `block` 为 `tuple[bool, bool]` 时表示该任务不使用本插件的阻断定义，独自定义该任务的插件级阻断 (pBlk)与任务级阻断 (pBlk)。
+
+**规则**
+
+| 插件阻断 (pBlk) | 任务阻断 (hBlk) | 阻断结果                                                                           |
+| --------------- | --------------- | ---------------------------------------------------------------------------------- |
+| True            | True            | 后续任务都被阻断。                                                                 |
+| True            | False           | **本插件优先级内**的后续任务会**继续触发**，但**后续插件优先级**的任务会**被阻断** |
+| False           | True            | **本插件优先级内**的后续任务会**被阻断**，但**后续插件优先级**的任务会**继续触发** |
+| False           | False           | 后续任务都继续执行。                                                               |
+
+_当并发执行的任务存在不同的阻断规则时，合并的阻断规则为按位取或。_
+
+指令-响应任务函数的返回值代表指令触发的响应。
+可以是任意类型, 这个返回值会发送给 build_result 方法构建成 Result 实例。
 
 如果你的插件的 build_result is None 那你就必须返回一个 Result 实例。
 
@@ -338,31 +473,9 @@ async def _(event: Event):
 接下来的示例是指令为 "测试" 回应 "你好" 的 插件指令-响应任务
 
 ```python
-@plugin.handle(["测试"])
+@PLUGIN.handle(["测试"])
 async def _(event: Event):
     return Result("text", "你好")
-```
-
-## 指令-响应任务获取平台参数
-
-如果你在插件中需要获取一些平台参数，那么需要在注册 plugin.handle 时事先声明需要的参数
-
-```python
-@plugin.handle(["测试"], properties=["user_id", "group_id"])
-async def _(event: Event):
-    print(event.properties["user_id"])
-    print(event.properties["group_id"])
-    print(event.properties["others"])  # KeyError
-```
-
-也可以这样
-
-```python
-@plugin.handle(["测试"], properties=["user_id", "group_id"])
-async def _(event: Event):
-    print(event.user_id)
-    print(event.group_id)
-    print(event.others)  # KeyError
 ```
 
 适配器方法会根据你需要的参数构建 event.properties
@@ -374,7 +487,7 @@ async def _(event: Event):
 这样的话，你也可以使用 call 方法
 
 ```python
-@plugin.handle(["测试"], ["at"])
+@PLUGIN.handle(["测试"], ["at"])
 async def _(event: Event):
     at_user_id = event.properties["at"]
     # print(event.properties["group_id"]) # KeyError
@@ -383,142 +496,61 @@ async def _(event: Event):
         member = await event.call("group_member_info", group_id, at_user_id)
 ```
 
-## 指令-响应任务的规则
-
-```python
-@plugin.handle(
-    ["其他功能"],
-    properties=["to_me"],
-    rule=lambda e: e.to_me,
-    priority=10,
-    block=False,
-)
-async def _(event: Event):
-    pass
-```
-
-- rule 是参数为 event，返回值为 bool 的函数, 或此类函数的列表。
-- 如果是函数列表，则所有函数的检查都通过才会触发任务
-- 需要注意的是，传给 rule 的参数是 build_event 的返回值，并不是原始的 Event 类实例，除非你的 build_event is None
-
 ## 临时任务
 
+PLUGIN.temp_handle 装饰器的参数有 `properties` `timeout` `rule` `block` `state`
+
+参数介绍
+
+- `properties`: 与[指令-响应任务获取平台参数](#指令-响应任务获取平台参数)一致
+- `timeout`: 类型为 `float | int` 临时任务的有效时间，从注册任务开始算起，单位为秒
+- `rule`: 与[指令-响应任务的规则](#指令-响应任务的规则)一致
+- `block`: 与[指令-响应任务的阻断](#指令-响应任务的阻断)一致
+- `state`: 临时任务 handle 的 `state` 属性，可以是任意类型
+
+_临时任务大部分行为都与普通任务一致，这里不过多赘述，仅介绍不同点。_
+
+**临时任务的响应**
+
+使用 @PLUGIN.temp_handle 装饰的函数匹配规则为 `None`，这意味着它会在收到任何指令时触发执行。
+
+**临时任务的优先级**
+
+临时任务只有插件优先级 (pPri)，在本 pPri 内，临时任务是先于普通任务执行的。
+
+**临时任务的参数**
+
+与普通任务不同，临时任务装饰的函数有两个参数: `event`, `handle`
+
+`event` 与普通任务一致：为一个 `Event` 对象或 `build_event` 的返回值
+
+`handle` 为一个 `TempHandle` 对象。`TempHandle`包含以下属性或方法：
+
+- `state`: 临时任务 handle 的 `state` 属性，可以是任意类型，可随时注入或修改，用于记录当前任务的状态。
+- `delay`: 定义为 `def delay(timeout: float | int):` 用于推迟临时任务的销毁时间。
+- `finish`: 定义为 `def finish():` 立即销毁此临时任务。
+
+**临时任务的注册**
+
+这是与普通任务最大的不同，普通指令-响应任务在运行时创建会触发 RuntimeError，而临时任务被设计为在运行时创建。
+
+下面是一个例子：
+
 ```python
-from clovers import Event, Plugin, Result, TempHandle
-
-plugin = Plugin("Test", build_result=lambda msg: Result("text", msg))
-
-
-async def confirm(event: Event, handle: TempHandle):
-    handle.finish()
-    if event.message == "是":
-        return "已确定"
-    else:
-        return "已取消"
-
-
-@plugin.handle(["创建任务"], ["user_id", "group_id"])
+@PLUGIN.handle(["响应测试"], ["user_id", "group_id"])
 async def _(event: Event):
-    user_id = event.properties["user_id"]
-    group_id = event.properties["group_id"]
-    plugin.temp_handle(
-        ["user_id", "group_id"],
-        rule=lambda e: e.properties["user_id"] == user_id and e.properties["group_id"] == group_id,
-    )(confirm)
-    return "任务已创建，请输入 是 | 否 进行确认"
+    user_id = event.user_id
+    group_id = event.group_id
+    code = "".join([random.choice("0123456789") for _ in range(4)])
 
+    @PLUGIN.temp_handle(["nickname", "user_id", "group_id"], rule=lambda e: e.user_id == user_id and e.group_id == group_id)
+    async def _(event: Event, handle: TempHandle):
+        handle.finish()
+        if event.message == code:
+            return Result("text", "验证码验证成功")
+        return Result("text", "验证码验证失败")
 
-__plugin__ = plugin
-```
-
-临时任务没有优先级，而且是最优先触发。
-
-**注意，一般任务也可以在任务中注册，但是不会生效并且可能导致未定义的行为**
-
-`timeout` 任务超时时间（秒）
-
-temp_handle 会被任意消息触发，请传入规则或在响应函数中内置规则。
-
-temp_handle 任务的参数除了 event，你还会获得一个 handle 参数，它的功能是结束临时任务或延长本任务的超时时间。如果你不结束，在临时任务超时前每次消息都会触发。
-
-## 插件的优先级和阻断
-
-当一个指令可以触发多个任务时，会涉及到响应触发顺序和阻断。
-
-### 优先级 priority
-
-插件有两种优先级，一种是插件优先级 (pPri)，一种是任务优先级 (hPri)。
-
-(pPri) 高的任务先触发，(pPri) 相同，(hPri) 高的先触发。
-
-同一优先级插件的所有同级任务都会同时触发。
-
-### 阻断 block
-
-阻断有两种，一种是插件优先级阻断 (pBlk)，一种是任务优先级阻断 (hBlk)。
-
-下面的例子都是一次指令触发了多个响应的情况。
-
-当 (pBlk) 为 True, (hBlk) 为 True 时：阻断低于当前 (pPri) 和当前 (pPri) 内低于当前 (hPri) 的任务。
-
-当 (pBlk) 为 True, (hBlk) 为 False 时：阻断低于当前 (pPri) 的任务，但会继续触发当前 (pPri) 内低于当前 (hPri) 的任务。
-
-当 (pBlk) 为 False, (hBlk) 为 True 时：阻断当前 (pPri) 内低于 (hPri) 的任务，但会继续触发低于当前 (pPri) 的任务。
-
-当 (pBlk) 为 False, (hBlk) 为 False 时：不阻断
-
-## 插件配置文件
-
-配置文件存放在一个 toml 文件里，文件由你指定
-
-关于配置的详细介绍可以参考[文档](/document)
-
-下面是配置一个例子
-
-clovers.toml
-
-```toml
-[clovers_AIchat]
-nickname = "小叶子"
-timeout = 600
-```
-
-插件获取的配置会是一个字典。
-
-为便于插件间的配置互相获取，建议在插件中使用类似下面的代码加载配置
-
-```python
-from clovers.config import Config as CloversConfig
-
-config_data: dict = CloversConfig.environ().setdefault(__package__, {})
-default_config = {"nickname": "小叶子", "timeout": 600}
-config_data.update({k: v for k, v in default_config.items() if k not in config_data})
-```
-
-当然，更推荐的做法是使用 pydantic 进行类型验证。
-
-```python
-from pydantic import BaseModel
-from clovers.config import Config as CloversConfig
-
-
-class Config(BaseModel):
-    ...
-
-    @classmethod
-    def sync_config(cls):
-        """获取 `CloversConfig.environ()[__package__]` 配置并将默认配置同步到全局配置中。"""
-        __config_dict__: dict = CloversConfig.environ().setdefault(__package__, {})
-        __config_dict__.update((__config__ := cls.model_validate(__config_dict__)).model_dump())
-        return __config__
-```
-
-为了更方便的修改配置，你可以保存当前的配置，这样所有配置项都会出现在配置文件里
-
-```python
-@plugin.startup
-async def _():
-    clovers_config.save()
+    return Result("text", f"请输入验证码：{code}")
 ```
 
 ## 插件间的依赖
@@ -526,28 +558,30 @@ async def _():
 当插件依赖其他 clovers 插件时，你除了需要 import 你需要的对象外，你还需要用插件的 require 方法来声明依赖。
 
 ```python
-plugin.require("clovers-apscheduler")
+PLUGIN.require("clovers-apscheduler")
 ```
+
+这样你依赖的插件无需声明加载也会正常启动。
 
 **注意：声明依赖只针对 clovers 插件，不要利用 require 方法声明一般 python 模块**
 
-# 适配器 Adapter
+# 编写 Clovers 适配器
 
-你需要编写一个模块，这个模块需要包含一个`__adapter__`属性，这个属性是一个 adapter.Adapter 实例
+**注意: 适配器是针对于特定 CloversCore 类的，而 CloversCore 是一个抽象类。因此在编写适配器时你必须清楚该 CloversCore 实现都给了适配器哪些参数。**
 
-关于 Adapter 类的详细介绍可以参考[文档](/document)
+在任意 Python 导入路径下，只要包含名为 `ADAPTER` 且类型为 `Adapter` 实例的属性，都可作为 Clovers 适配器加载。
+
+关于适配器的配置，我们推荐使用 `Config` 类（参考[配置文件](#配置文件)章节）
 
 ```python
 from clovers import Adapter
 
-adapter = Adapter()  # 创建 Adapter 实例
-
-__adapter__ = adapter  # 暴露 __adapter__ 属性
+ADAPTER = Adapter("MyAdapter")  # 创建 Adapter 实例
 ```
 
 ~~创建好了~~
 
-一个适配器可以有多个适配器方法
+ADAPTER 实例有三个装饰器，分别为获取参数、发送、调用。
 
 ## 获取参数 property_method 方法
 
@@ -557,23 +591,21 @@ __adapter__ = adapter  # 暴露 __adapter__ 属性
 
 所以你需要在适配器方法中定义这个参数的获取方法
 
-property 方法的参数是 clovers 实例响应时传入的，我们可以传入任意参数，请参考 [使用 Clovers 框架](#响应处理器-Leaf) 3. 在运行阶段先启动实例再执行响应任务
-
-下面是 nonebot_plugin_clovers.adapters.onebot.v11 中的一个例子
+下面是 `nonebot_plugin_clovers.adapters.onebot.v11` 中的一个例子
 
 ```python
-@adapter.property_method("user_id")
-async def _(event: MessageEvent):
+@ADAPTER.property_method("user_id")
+async def _(event: MessageEvent) -> str:
     return event.get_user_id()
 ```
 
-这样，如果 handle 声明了 `properties=["user_id"]` 参数，那么原始 Event 实例的 `event.properties["user_id"]` 就会是 `event.get_user_id()` 的返回值
+这样，如果 handle 声明了 `properties=["user_id"]` 参数，那么任务接收到的 `event.user_id` 就是 `event.get_user_id()`
 
 诸如此类的方法，都需要在适配器方法中定义
 
 ## 发送消息 send_method 方法
 
-在[指令-响应任务的响应](#指令-响应任务的响应)的示例中，我们使用了返回的 `Result` 类实例的 `key` 标记为 `text`
+在[指令-响应任务的返回值](#指令-响应任务的返回值)的示例中，我们使用了 `key` 为 `text` 的 `Result` 实例。
 
 发送消息也是适配器的工作，但是如果你不定义的话，适配器并不知道该怎么发送 `text` 消息
 
@@ -581,60 +613,44 @@ async def _(event: MessageEvent):
 
 适配器会向 send 方法传入 `Result` 类实例的 `data` 属性作为第一个参数。
 
-此外 send 方法会接受 clovers 响应时传入的额外关键字参数。
-
-下面是简化的 nonebot_plugin_clovers.adapters.onebot.v11 中的一个例子
+下面是 `nonebot_plugin_clovers.adapters.onebot.v11` 中的一个例子
 
 ```python
-@adapter.send_method("text")
-async def _(message, /, bot: Bot, event: MessageEvent):
-    await bot.send(event=event, message=MessageSegment.text(message))
+@ADAPTER.send_method("text")
+async def _(message: str, /, bot: Bot, event: MessageEvent):
+    await bot.send(event, MessageSegment.text(message))
 ```
 
 ## 获取响应 call_method 方法
 
-在[指令-响应任务获取平台参数](#指令-响应任务获取平台参数)第二个示例中，我们 call 了两个获取响应方法
+在[指令-响应任务获取平台参数](#指令-响应任务获取平台参数)后两个示例中，我们使用 `event.call` 获取了两个平台参数。
 
-其中 group_id 是 property_method 注册的，它不需要参数，返回值等价于声明`properties=["group_id"]` 的 `event.properties["group_id"]`
+其中 `user_id` 是 `property_method` 注册的，它不需要参数。
 
-另一个 group_member_info 需要参数，需要用 call_method 注册
+另一个 `group_member_info` 需要参数，需要用 call_method 注册。
 
-下面是 nonebot_plugin_clovers.adapters.onebot.v11 中的一个例子
-
-```python
-@adapter.call_method("group_member_info")
-async def _(group_id: str, user_id: str, /, bot: Bot):
-    user_info = await bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id))
-    member_user_id = str(user_info["user_id"])
-    user_info["group_id"] = str(user_info["group_id"])
-    user_info["user_id"] = member_user_id
-    user_info["avatar"] = f"https://q1.qlogo.cn/g?b=qq&nk={member_user_id}&s=640"
-    return user_info
-```
-
-call_method 注册的方法只接受位置参数
-
-此外 send_method 也会注册 call_method 方法，但是 send_method 只接受一个参数，也就是返回值 Result 实例的 data 部分
-
-如果希望发送 "你好，世界", 你除了可以让函数返回 `Result("text", "你好，世界")`之外，你也可以这样用
+下面是 `clovers_client.onebot.v11` 中的一个例子
 
 ```python
-@plugin.handle(["测试"])
-async def _(event: Event):
-    await event.call("text", "你好，世界")
+@ADAPTER.call_method("group_member_info")
+async def _(group_id: str, user_id: str, /, call: OneBotV11API) -> MemberInfo:
+    user_info = await call("get_group_member_info", {"group_id": int(group_id), "user_id": int(user_id)}, True)
+    return {
+        "group_id": group_id,
+        "user_id": user_id,
+        "avatar": f"https://q1.qlogo.cn/g?b=qq&nk={user_id}&s=640",
+        "nickname": user_info["nickname"],
+        "card": user_info["card"],
+        "last_sent_time": user_info.get("last_sent_time", 0),
+    }
+
 ```
 
-如果 call_method, property_method, send_method 注册了同名的方法
+_注意由于 Clovers 框架的限制 `call_method` 注册的方法只接受位置参数_
 
-那么 call 会调用 call_method 注册的方法
+_其实 `property_method` 与 `call_method` 只是名字不一样_
 
-返回的 Result 会调用 send_method 注册的方法
-
-声明的 properties 会调用 property_method 注册的方法
-
-如果 property_method, send_method 注册了同名的方法，那么 call 会调用第一个注册的方法，**但是非常不建议使用这个特性。**
-
-# 类型协议 CloversProtocol
+# 类型协议
 
 适配器方法会根据插件声明的参数构建参数，处理响应结果。但是同名参数不一定是兼容的
 
@@ -646,163 +662,248 @@ async def _(event: Event):
 
 插件需要包含适配器的全部可能类型才会检查通过。
 
+为了使用类型协议，适配器的代码中需要写完整的类型提示：
+
+**参数类型**
+
+参数类型会标注返回值类型。注意参数类型的纯位置参数个数必须是 0，否则会被识别为调用类型。
+
 ```python
-class AdapterProtocol:
+@ADAPTER.property_method("user_id")
+async def _(event: MessageEvent) -> str: ...
+```
+
+这样写会标记 `call["user_id"] = str`
+
+**响应类型**
+
+响应类型会标注第一个纯位置参数的类型，注意必须有纯位置参数分割符，否则不会提取类型协议。
+
+```python
+@ADAPTER.send_method("image")
+async def _(message: bytes | BytesIO, /, bot: Bot, event: MessageEvent): ...
+```
+
+这样写会标记 `send["image"] = bytes | BytesIO`
+
+**调用类型**
+
+调用类型会标注纯位置参数的类型，注意必须有纯位置参数分割符，否则不会提取类型协议。
+
+```python
+@ADAPTER.call_method("group_member_info")
+async def _(group_id: str, user_id: str, /, call: OneBotV11API) -> MemberInfo: ...
+```
+
+这样写会标记 `call["group_member_info"] = Callable[str, str, Coroutine[Any, Any, MemberInfo]]`
+
+而插件需要定义并设置类型协议：
+
+```python
+from clovers import EventType
+from typing import Protocol
+
+
+class Event(EventType, Protocol):
     user_id: str
 
-class PluginProtocol:
-    user_id: str | int
+    @overload
+    async def send(self, key: Literal["image"], message: bytes | BytesIO): ...
 
-print(check_compatible(AdapterProtocol, PluginProtocol)) # True
-print(check_compatible(PluginProtocol, AdapterProtocol)) # False
+    @overload
+    def call(self, key: Literal["group_member_info"], group_id: str, user_id: str) -> Coro[MemberInfo] | None: ...
+
+    def send(self, key: str, message: Any):
+        raise NotImplementedError
+
+    def call(self, key: str, *args: Any, **kwargs):
+        raise NotImplementedError
+
+
+PLUGIN.protocol = Event
 ```
 
-`check_compatible` 只会检查两个协议都有的字段，如果插件声明了适配器不存在的字段，初始化行为是未定义而非不兼容
+_根据惯用例，作为类型协议的类还会被当做 event 参数的类型标注。_
 
-适配器的代码中如果写了完整的类型提示则不需要显示设置适配器的类型协议。
+# 响应处理器
+
+`CloversCore` 是整个框架的消息调度中心，它作为一个抽象基类，作用为与底层平台交互，并为响应器提供所需要的参数。
+
+## 响应处理器的入口
+
+`CloversCore.dispatch` 是 Clovers 框架的入口，在任何实现中，外部驱动都需要以关键字参数的形式为 `dispatch` 传入所有需要的数据。
+
+`CloversCore.dispatch` 返回一个 `Task[int] | None` 如果返回 `None` 则表示 dispatch 被跳过，`await task` 返回的 `int` 表示 dispatch 触发的 `handle` 个数。
+
+这是 `nonebot-plugin-clovers` 中，NoneBot 驱动 Clovers 的入口:
 
 ```python
-@adapter.property_method("user_id")
-async def _(event: Event) -> str:
-    return event.get_user_id()
+async def handler(bot, event, matcher):
+    if (coro := self.dispatch(bot=bot, event=event)) and await coro:
+        matcher.stop_propagation()
 ```
 
-这样写相当于
+_NoneBot 为 `dispatch` 提供了 `bot` 和 `event` 参数，这意味着 Clovers 适配器可以使用这两个参数实现 NoneBot 绝大部分与协议端的交互。_
+
+这是简化的 `clovers-client.onebot.v11` 中，websockets 驱动 Clovers 的入口:
 
 ```python
-@adapter.property_method("user_id")
+while self._ready:
+    ...
+    async for recv_data in ws_connect:
+        recv = json.loads(recv_data)
+        if not recv.get("post_type") == "message":
+            continue
+        self.dispatch(call=self.call_api, recv=recv, client=self)
+    ...
+```
+
+_主循环会为 `dispatch` 提供 `call_api` 的能力与 `ws_connect` 收到的消息体。_
+
+## 消息提取
+
+`CloversCore.extract_message` 是 `CloversCore` 唯一的抽象方法，其参数是 `CloversCore.dispatch` 接收的所有关键字参数。
+
+你需要根据当前适配的平台规则，使用**所有**这些参数并从中提取出一个 `str` 格式的纯文本信息信息用来触发插件匹配，或者返回一个 `None` 来跳过 dispatch。
+
+**再次强调：即使用不到某些参数，`CloversCore.extract_message` 也必须接收所有 `CloversCore.dispatch` 传入的参数。**
+
+## 启动与停止
+
+在进行 `dispatch` 之前，`CloversCore` 必须被启动，而在关闭实例时，`CloversCore` 应该被停止。
+
+_更准确的说，`startup` 包含初始化逻辑，必须被执行。而 `shutdown` 仅做了等待未完成事件与触发插件 `shutdown` 任务。假如 Clovers 是一个 forever loop 那么 `shutdown` 其实并不是很重要。_
+
+启动与关闭的方法有异步上下文与函数调用两种。
+
+1. 异步上下文
+
+   ```python
+   clovers: CloversCore = ...
+
+   async with clovers:
+       ...
+   ```
+
+   一般用于 `CloversCore` 自行管理生命周期的独立客户端场景。
+
+2. 函数调用
+
+   ```python
+   clovers: CloversCore = ...
+
+   await clovers.startup()
+   ...
+   await clovers.shutdown()
+   ```
+
+   一般用于 `CloversCore` 被其他框架管理生命周期的寄生场景。
+
+## 多核响应处理器
+
+多核响应处理器 `CloversMultiCore` 是一个非常简单的类，其内部有多个 `CloversCore` 实例，用于多平台场景。
+
+多核响应处理器的实例化参数是多个 `CloversCore` 实例，这些实例会形成一个元组存在在 `CloversMultiCore.cores` 中。
+
+`CloversMultiCore.locate_core` 是其唯一抽象方法，用于根据 `CloversCore.dispatch` 传入的参数，返回针对于这个参数的 `CloversCore` 实例。
+
+归功于这种机制，每次 `CloversMultiCore.dispatch` 只能由一个 `CloversCore` 响应。
+
+# 最小可运行示例
+
+本章是一个最简单的 Clovers 框架实现，包含适配器，插件，响应处理器，类型提示和协议。
+
+```python
+# main.py
+from clovers import CloversCore
+from my_adapter import ADAPTER
+from my_plugin import PLUGIN
+
+
+class MyClovers(CloversCore):
+    def extract_message(self, message: str, **ignore):
+        return message
+
+
+async def main():
+    clovers = MyClovers("MyClovers")
+    clovers.adapter.mixin(ADAPTER)
+    clovers.plugins.append(PLUGIN)
+    async with clovers:
+        while True:
+            coro = clovers.dispatch(message=input("请输入消息："), bot_nickname="MyBot")
+            if coro:
+                await coro
+
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
+```
+
+这是 `my_adapter.py` 内定义的适配器，用三种装饰器添加了三种方法。
+
+```python
+# my_adapter.py
+from datetime import datetime
+from clovers import Adapter
+
+
+ADAPTER = Adapter("MyAdapter")
+
+
+@ADAPTER.send_method("text")
+async def _(text: str, /):
+    print(text)
+
+
+@ADAPTER.property_method("bot_nickname")
+async def _(bot_nickname: str) -> str:
+    return bot_nickname
+
+
+@ADAPTER.call_method("datetime")
+async def _(format: str) -> str:
+    return datetime.now().strftime(format)
+
+```
+
+这是 `my_plugin.py` 内定义的插件，包含类型提示和协议。
+
+```python
+from clovers import EventType, Plugin, Result
+from typing import Protocol, Literal
+
+
+class Event(EventType, Protocol):
+    bot_nickname: str
+
+    async def send(self, key: Literal["text"], data: str): ...
+
+    async def call(self, key: Literal["datetime"], format: str) -> str: ...
+
+
+PLUGIN = Plugin[Event]("MyPlugin", build_result=lambda data: Result("text", data))
+PLUGIN.protocol = Event
+
+
+@PLUGIN.startup
+def _():
+    print(f"{PLUGIN.name} 启动")
+
+
+@PLUGIN.handle(["测试"], ["bot_nickname"])
 async def _(event: Event):
-    return event.get_user_id()
-
-class AdapterProtocol:
-    user_id: str
-
-adapter.set_protocol("properties", AdapterProtocol)
+    await event.send("text", f"Hello, {event.bot_nickname}")
+    return f"现在的时间是：{await event.call("datetime","%Y-%m-%d %H:%M:%S")}"
 ```
 
-插件则需要显式设置协议
+运行结果：
 
-# 响应处理器 Leaf
-
-Leaf 是一个用于处理适配器与插件的响应处理器基类。
-
-继承这个类并实现 extract_message 方法即可创建一个可用的响应处理器
-
-extract_message 接受的参数来自调用 response 方法时转入的参数，一般来说不同运行例有不同的参数。
-
-```python
-from clovers import Leaf as BaseLeaf
-
-
-class MyLeaf(BaseLeaf):
-    def extract_message(self, state: dict, **ignore):
-        inputs = state.get("message")
-        if inputs is None:
-            return None
-        if inputs.startswith(Bot_Nickname):
-            inputs = inputs.lstrip(Bot_Nickname)
-            state["to_me"] = True
-        return inputs
-```
-
-使用方法
-
-```python
-leaf = MyLeaf("Sample")
-
-asyncio.create_task(leaf.response(state=state, others=others))
-
-```
-
-这样就会触发响应
-
-# 客户端 Client
-
-上述响应处理器触发响应的代码一般是在某个循环里面持续运行，下面例举使用 clovers 客户端的情况。
-
-clovers 框架提供了 `Client` 类，用于编写 clovers 客户端。
-
-下面是 clovers_client 模块里面 onebot_v11 客户端的简化实现方法
-
-```python
-from clovers import Client as CloversClient
-
-
-class MyClient(CloversClient):
-    def __init__(self, url: str, ws_url: str, name="OneBot V11"):
-        super().__init__()
-        self.name = name
-        self.url = url
-        self.client = httpx.AsyncClient()
-        self.ws_connect = websockets.connect(ws_url)
-
-    async def post(self, endpoint: str, **kwargs) -> dict:
-        resp = await self.client.post(url=f"{self.url}/{endpoint}", **kwargs)
-        resp = resp.json()
-        return resp
-
-    async def run(self):
-        ws = await self.ws_connect
-        async with self:
-            async with self.client:
-                while self.running:
-                    async for recv in ws:
-                        asyncio.create_task(leaf.response(post=self.post, recv=json.loads(recv)))
-        await ws.close()
-
-```
-
-## 运行
-
-```python
-
-# 配置日志记录器，不配置可能无法输出日志
-
-from clovers.logger import logger as clovers_logger
-clovers_logger.setLevel(log_level)
-clovers_logger.addHandler(hdlr)
-
-# 进行各种配置
-
-asyncio.run(MyClient().run())
-```
-
-clovers.logger.logger 实际上是 logging.getLogger("clovers")，请依据需求配置
-
-## 寄生
-
-寄生依然需要配置日志记录器，但不执行 run 方法
-
-根据下面是 QQbot PythonSDK 独立运行和寄生的区别
-
-```python
-class Client(CloversClient):
-    async def run(self):
-        async with self:
-            async with QQBotClient(Intents(public_guild_messages=True, public_messages=True)) as client:
-                await client.start(appid=appid, secret=secret)
-async def main():
-    await Client().run()
-```
-
-```python
-class Client(CloversClient):
-    async def run(self):
-        raise RuntimeError("寄生客户端不支持运行")
-
-async def main():
-    async with QQBotClient(Intents(public_guild_messages=True, public_messages=True)) as qq_bot_client:
-        async with Client():
-            await qq_bot_client.start(appid=appid, secret=secret)
-```
-
-在寄生的情况下如果没有合适的地方使用 async with 上下文也可以使用 hook 的方式
-
-```python
-from nonebot import get_driver
-
-clovers_client = Client()
-
-get_driver().on_startup(clovers_client.startup)
-get_driver().on_shutdown(clovers_client.shutdown)
+```txt
+MyPlugin 启动
+请输入消息：测试
+Hello, MyBot
+现在的时间是：2026-04-12 01:18:28
+请输入消息：
 ```
